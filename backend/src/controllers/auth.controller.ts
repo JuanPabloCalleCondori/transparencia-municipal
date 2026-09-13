@@ -62,3 +62,10 @@ export function me(req: Request, res: Response) {
     usuario: req.user,
   });
 }
+
+export function adminTest(_req: Request, res: Response) {
+  return res.status(200).json({
+    status: "ok",
+    message: "Acceso autorizado como administrador",
+  });
+}
