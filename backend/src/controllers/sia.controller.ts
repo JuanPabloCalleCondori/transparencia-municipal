@@ -25,6 +25,46 @@ import {
   createNotification,
 } from "../services/notification.service.js";
 
+import {
+  getAssignmentDepartments,
+  getAssignmentUsers,
+} from "../services/user.service.js";
+
+
+
+export async function assignmentOptions(
+  _req: Request,
+  res: Response
+) {
+  try {
+    const [
+      departamentos,
+      usuarios,
+    ] = await Promise.all([
+      getAssignmentDepartments(),
+      getAssignmentUsers(),
+    ]);
+
+    return res.status(200).json({
+      status: "ok",
+      departamentos,
+      usuarios,
+    });
+  } catch (error) {
+    console.error(
+      "Error obteniendo opciones de asignación:",
+      error
+    );
+
+    return res.status(500).json({
+      status: "error",
+      message:
+        "Error interno del servidor",
+    });
+  }
+}
+
+
 
 /* =========================================================
    CREAR SOLICITUD

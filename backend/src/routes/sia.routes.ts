@@ -8,6 +8,7 @@ import {
   changeStatus,
   history,
   createExtension,
+  assignmentOptions,
 } from "../controllers/sia.controller.js";
 
 import {
@@ -40,6 +41,14 @@ router.get(
   list
 );
 
+router.get(
+  "/assignment-options",
+  authorizeRoles(
+    "ADMINISTRADOR_MUNICIPAL",
+    "ENLACE_MUNICIPAL"
+  ),
+  assignmentOptions
+);
 
 /*
  * Historial de auditoría.
@@ -53,11 +62,11 @@ router.get(
   history
 );
 
-
 /*
  * Obtener solicitud
  * por ID.
  */
+
 router.get(
   "/:id",
   getById

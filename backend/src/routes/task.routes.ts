@@ -6,6 +6,7 @@ import {
   listTasks,
   getTask,
   updateTaskStatus,
+  assignTask,
 } from "../controllers/task.controller.js";
 
 import {
@@ -61,6 +62,11 @@ router.patch(
     "FUNCIONARIO_OPERATIVO"
   ),
   updateTaskStatus
+);
+
+router.patch(
+  "/:taskId/assign",
+  assignTask
 );
 
 export default router;

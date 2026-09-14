@@ -8,6 +8,7 @@ import {
   getTasksByRequest,
   getTaskById,
   changeTaskStatus,
+  assignTaskResponsible,
 } from "../services/task.service.js";
 
 import {
@@ -415,6 +416,163 @@ export async function getTask(
 }
 
 
+export async function assignTask(
+  req: Request,
+  res: Response
+) {
+  try {
+    const idSolicitud =
+      Number(req.params.id);
+
+    const idTarea =
+      Number(req.params.taskId);
+
+    const {
+      idUsuarioAsignado,
+    } = req.body;
+
+
+    /*
+     * Validamos IDs.
+     */
+    if (
+      !Number.isInteger(
+        idSolicitud
+      ) ||
+      idSolicitud <= 0 ||
+      !Number.isInteger(
+        idTarea
+      ) ||
+      idTarea <= 0
+    ) {
+      return res.status(400).json({
+        status: "error",
+        message:
+          "Solicitud o tarea inválida",
+      });
+    }
+
+
+    if (
+      !Number.isInteger(
+        idUsuarioAsignado
+      ) ||
+      idUsuarioAsignado <= 0
+    ) {
+      return res.status(400).json({
+        status: "error",
+        message:
+          "Usuario asignado inválido",
+      });
+    }
+
+
+    /*
+     * Guardamos los datos anteriores
+     * para auditoría.
+     */
+    const tareaAnterior =
+      await getTaskById(
+        idSolicitud,
+        idTarea
+      );
+
+
+    /*
+     * Ejecutamos la asignación.
+     */
+    const tarea =
+      await assignTaskResponsible(
+        idSolicitud,
+        idTarea,
+        idUsuarioAsignado
+      );
+
+
+    /*
+     * Registramos auditoría.
+     */
+    await registerAudit({
+      idUsuario:
+        req.user?.idUsuario,
+
+      entidad:
+        "TAREA",
+
+      idRegistro:
+        idTarea,
+
+      accion:
+        "ASIGNAR_RESPONSABLE_TAREA",
+
+      descripcion:
+        `Se asignó un responsable a la tarea "${tarea.titulo}"`,
+
+      datosAnteriores: {
+        idUsuarioAsignado:
+          tareaAnterior
+            .id_usuario_asignado,
+
+        usuarioNombre:
+          tareaAnterior
+            .usuario_nombre,
+
+        usuarioApellido:
+          tareaAnterior
+            .usuario_apellido,
+      },
+
+      datosNuevos: {
+        idUsuarioAsignado:
+          tarea.id_usuario_asignado,
+
+        usuarioNombre:
+          tarea.usuario_nombre,
+
+        usuarioApellido:
+          tarea.usuario_apellido,
+      },
+
+      ipOrigen:
+        req.ip,
+    });
+
+
+    /*
+     * Notificamos al nuevo
+     * responsable.
+     */
+    await createNotification({
+      idUsuario:
+        idUsuarioAsignado,
+
+      titulo:
+        "Tarea SIA asignada",
+
+      mensaje:
+        `Se te ha asignado la tarea "${tarea.titulo}" asociada a la solicitud SIA N.º ${idSolicitud}.`,
+
+      tipo:
+        "TAREA",
+    });
+
+
+    return res.status(200).json({
+      status: "ok",
+      message:
+        "Responsable de tarea actualizado correctamente",
+      tarea,
+    });
+
+  } catch (error) {
+    return handleTaskError(
+      error,
+      res,
+      "Error asignando responsable a tarea"
+    );
+  }
+}
+
 /*
  * =========================================================
  * ACTUALIZAR ESTADO
@@ -625,6 +783,13 @@ function handleTaskError(
             "La solicitud ya posee una tarea madre",
         });
 
+      case "SOLICITUD_CERRADA":
+        return res.status(409).json({
+          status: "error",
+          message:
+            "No es posible asignar tareas de una solicitud finalizada o cancelada",
+        });
+      
       case "USUARIO_INVALIDO":
         return res.status(400).json({
           status: "error",

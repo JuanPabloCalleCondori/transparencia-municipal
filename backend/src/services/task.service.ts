@@ -680,3 +680,128 @@ export async function changeTaskStatus(
 
   return result.rows[0];
 }
+
+export async function assignTaskResponsible(
+  idSolicitud: number,
+  idTarea: number,
+  idUsuarioAsignado: number
+) {
+  /*
+   * Verificamos que la tarea exista
+   * y pertenezca a la solicitud.
+   */
+  await getTaskById(
+    idSolicitud,
+    idTarea
+  );
+
+
+  /*
+   * Verificamos que la solicitud
+   * siga abierta.
+   */
+  const requestResult =
+    await pool.query(
+      `
+      SELECT
+        s.id_solicitud,
+        e.nombre AS estado
+      FROM solicitudes_sia s
+      INNER JOIN estados_solicitud e
+        ON e.id_estado = s.id_estado
+      WHERE s.id_solicitud = $1
+      `,
+      [idSolicitud]
+    );
+
+
+  if (
+    requestResult.rowCount === 0
+  ) {
+    throw new Error(
+      "SOLICITUD_NO_ENCONTRADA"
+    );
+  }
+
+
+  const estadoSolicitud =
+    requestResult.rows[0].estado;
+
+
+  if (
+    estadoSolicitud === "FINALIZADA" ||
+    estadoSolicitud === "CANCELADA"
+  ) {
+    throw new Error(
+      "SOLICITUD_CERRADA"
+    );
+  }
+
+
+  /*
+   * Validamos que el usuario
+   * exista y esté activo.
+   */
+  const userResult =
+    await pool.query(
+      `
+      SELECT
+        id_usuario
+      FROM usuarios
+      WHERE id_usuario = $1
+        AND activo = TRUE
+      `,
+      [idUsuarioAsignado]
+    );
+
+
+  if (
+    userResult.rowCount === 0
+  ) {
+    throw new Error(
+      "USUARIO_INVALIDO"
+    );
+  }
+
+
+  /*
+   * Asignamos el nuevo responsable.
+   */
+  const result =
+    await pool.query(
+      `
+      UPDATE tareas
+      SET
+        id_usuario_asignado = $1
+      WHERE id_tarea = $2
+        AND id_solicitud = $3
+      RETURNING *
+      `,
+      [
+        idUsuarioAsignado,
+        idTarea,
+        idSolicitud,
+      ]
+    );
+
+
+  if (
+    result.rowCount === 0
+  ) {
+    throw new Error(
+      "TAREA_NO_ENCONTRADA"
+    );
+  }
+
+
+  /*
+   * Devolvemos la tarea mediante
+   * getTaskById para recuperar
+   * también nombre, apellido,
+   * departamento, etc.
+   */
+  return getTaskById(
+    idSolicitud,
+    idTarea
+  );
+}

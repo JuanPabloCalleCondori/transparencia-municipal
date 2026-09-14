@@ -284,3 +284,43 @@ export async function deactivateUser(idUsuario: number) {
 
   return result.rows[0];
 }
+
+export async function getAssignmentDepartments() {
+  const result = await pool.query(
+    `
+    SELECT
+      id_departamento,
+      nombre
+    FROM departamentos
+    WHERE activo = TRUE
+    ORDER BY nombre
+    `
+  );
+
+  return result.rows;
+}
+
+
+export async function getAssignmentUsers() {
+  const result = await pool.query(
+    `
+    SELECT
+      u.id_usuario,
+      u.nombre,
+      u.apellido,
+      u.id_departamento,
+      d.nombre AS departamento
+    FROM usuarios u
+    INNER JOIN departamentos d
+      ON d.id_departamento = u.id_departamento
+    WHERE u.activo = TRUE
+      AND d.activo = TRUE
+    ORDER BY
+      d.nombre,
+      u.nombre,
+      u.apellido
+    `
+  );
+
+  return result.rows;
+}

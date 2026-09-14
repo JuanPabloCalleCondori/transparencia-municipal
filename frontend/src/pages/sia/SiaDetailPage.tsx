@@ -27,6 +27,9 @@ import {
   getDeadlineStatus,
 } from "../../utils/deadline";
 
+import SiaTasksSection
+  from "../../components/sia/SiaTasksSection";
+
 
 function formatState(
   state?: string | null
@@ -1378,6 +1381,15 @@ export default function SiaDetailPage() {
             )}
 
           </div>
+          
+          <SiaTasksSection
+              idSolicitud={
+              request.id_solicitud
+            }
+            closed={
+            closed
+            }
+            />
         </div>
 
 
