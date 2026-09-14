@@ -394,6 +394,17 @@ export async function assign(
             "No fue posible generar la notificación para el responsable",
         });
       }
+      if (
+        error.message ===
+        "SOLICITUD_CERRADA"
+      ) {
+        return res.status(409).json({
+          status: "error",
+          message:
+              "Una solicitud finalizada o cancelada no puede volver a asignarse",
+      });
+    }
+
     }
 
     console.error(
@@ -519,6 +530,27 @@ export async function changeStatus(
           message:
             "Estado de solicitud inválido",
         });
+      }
+      if (
+        error.message ===
+        "SOLICITUD_CERRADA"
+      ) {
+        return res.status(409).json({
+          status: "error",
+          message:
+            "La solicitud ya se encuentra cerrada y no puede cambiar de estado",
+      });
+      }
+
+      if (
+        error.message ===
+        "TRANSICION_ESTADO_INVALIDA"
+      ) {
+        return res.status(409).json({
+          status: "error",
+          message:
+            "La transición solicitada no está permitida para el estado actual",
+      });
       }
     }
 

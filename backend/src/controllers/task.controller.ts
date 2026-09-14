@@ -19,6 +19,12 @@ import {
 } from "../services/notification.service.js";
 
 
+/*
+ * =========================================================
+ * CREAR TAREA MADRE
+ * =========================================================
+ */
+
 export async function createMotherTask(
   req: Request,
   res: Response
@@ -35,7 +41,9 @@ export async function createMotherTask(
     } = req.body;
 
     if (
-      !Number.isInteger(idSolicitud) ||
+      !Number.isInteger(
+        idSolicitud
+      ) ||
       idSolicitud <= 0
     ) {
       return res.status(400).json({
@@ -57,9 +65,12 @@ export async function createMotherTask(
     }
 
     if (
-      idUsuarioAsignado !== undefined &&
+      idUsuarioAsignado !==
+        undefined &&
       idUsuarioAsignado !== null &&
-      !Number.isInteger(idUsuarioAsignado)
+      !Number.isInteger(
+        idUsuarioAsignado
+      )
     ) {
       return res.status(400).json({
         status: "error",
@@ -68,26 +79,30 @@ export async function createMotherTask(
       });
     }
 
-    const tarea = await createTask({
-      idSolicitud,
+    const tarea =
+      await createTask({
+        idSolicitud,
 
-      idUsuarioAsignado:
-        idUsuarioAsignado ?? null,
+        idUsuarioAsignado:
+          idUsuarioAsignado ??
+          null,
 
-      titulo:
-        titulo.trim(),
+        titulo:
+          titulo.trim(),
 
-      descripcion:
-        typeof descripcion === "string"
-          ? descripcion.trim()
-          : null,
+        descripcion:
+          typeof descripcion ===
+          "string"
+            ? descripcion.trim()
+            : null,
 
-      fechaVencimiento:
-        fechaVencimiento ?? null,
+        fechaVencimiento:
+          fechaVencimiento ??
+          null,
 
-      idTareaPadre:
-        null,
-    });
+        idTareaPadre:
+          null,
+      });
 
     await registerAudit({
       idUsuario:
@@ -112,10 +127,6 @@ export async function createMotherTask(
         req.ip,
     });
 
-    /*
-     * Si la tarea fue asignada a un usuario,
-     * generamos una notificación automática.
-     */
     if (
       tarea.id_usuario_asignado
     ) {
@@ -150,6 +161,12 @@ export async function createMotherTask(
 }
 
 
+/*
+ * =========================================================
+ * CREAR SUBTAREA
+ * =========================================================
+ */
+
 export async function createSubtask(
   req: Request,
   res: Response
@@ -159,7 +176,9 @@ export async function createSubtask(
       Number(req.params.id);
 
     const idTareaPadre =
-      Number(req.params.taskId);
+      Number(
+        req.params.taskId
+      );
 
     const {
       idUsuarioAsignado,
@@ -169,9 +188,13 @@ export async function createSubtask(
     } = req.body;
 
     if (
-      !Number.isInteger(idSolicitud) ||
+      !Number.isInteger(
+        idSolicitud
+      ) ||
       idSolicitud <= 0 ||
-      !Number.isInteger(idTareaPadre) ||
+      !Number.isInteger(
+        idTareaPadre
+      ) ||
       idTareaPadre <= 0
     ) {
       return res.status(400).json({
@@ -193,9 +216,12 @@ export async function createSubtask(
     }
 
     if (
-      idUsuarioAsignado !== undefined &&
+      idUsuarioAsignado !==
+        undefined &&
       idUsuarioAsignado !== null &&
-      !Number.isInteger(idUsuarioAsignado)
+      !Number.isInteger(
+        idUsuarioAsignado
+      )
     ) {
       return res.status(400).json({
         status: "error",
@@ -204,25 +230,29 @@ export async function createSubtask(
       });
     }
 
-    const tarea = await createTask({
-      idSolicitud,
+    const tarea =
+      await createTask({
+        idSolicitud,
 
-      idUsuarioAsignado:
-        idUsuarioAsignado ?? null,
+        idUsuarioAsignado:
+          idUsuarioAsignado ??
+          null,
 
-      titulo:
-        titulo.trim(),
+        titulo:
+          titulo.trim(),
 
-      descripcion:
-        typeof descripcion === "string"
-          ? descripcion.trim()
-          : null,
+        descripcion:
+          typeof descripcion ===
+          "string"
+            ? descripcion.trim()
+            : null,
 
-      fechaVencimiento:
-        fechaVencimiento ?? null,
+        fechaVencimiento:
+          fechaVencimiento ??
+          null,
 
-      idTareaPadre,
-    });
+        idTareaPadre,
+      });
 
     await registerAudit({
       idUsuario:
@@ -247,10 +277,6 @@ export async function createSubtask(
         req.ip,
     });
 
-    /*
-     * Notificación automática
-     * al usuario asignado.
-     */
     if (
       tarea.id_usuario_asignado
     ) {
@@ -285,6 +311,12 @@ export async function createSubtask(
 }
 
 
+/*
+ * =========================================================
+ * LISTAR
+ * =========================================================
+ */
+
 export async function listTasks(
   req: Request,
   res: Response
@@ -294,7 +326,9 @@ export async function listTasks(
       Number(req.params.id);
 
     if (
-      !Number.isInteger(idSolicitud) ||
+      !Number.isInteger(
+        idSolicitud
+      ) ||
       idSolicitud <= 0
     ) {
       return res.status(400).json({
@@ -325,6 +359,12 @@ export async function listTasks(
 }
 
 
+/*
+ * =========================================================
+ * DETALLE
+ * =========================================================
+ */
+
 export async function getTask(
   req: Request,
   res: Response
@@ -334,12 +374,18 @@ export async function getTask(
       Number(req.params.id);
 
     const idTarea =
-      Number(req.params.taskId);
+      Number(
+        req.params.taskId
+      );
 
     if (
-      !Number.isInteger(idSolicitud) ||
+      !Number.isInteger(
+        idSolicitud
+      ) ||
       idSolicitud <= 0 ||
-      !Number.isInteger(idTarea) ||
+      !Number.isInteger(
+        idTarea
+      ) ||
       idTarea <= 0
     ) {
       return res.status(400).json({
@@ -369,6 +415,12 @@ export async function getTask(
 }
 
 
+/*
+ * =========================================================
+ * ACTUALIZAR ESTADO
+ * =========================================================
+ */
+
 export async function updateTaskStatus(
   req: Request,
   res: Response
@@ -378,16 +430,22 @@ export async function updateTaskStatus(
       Number(req.params.id);
 
     const idTarea =
-      Number(req.params.taskId);
+      Number(
+        req.params.taskId
+      );
 
     const {
       estado,
     } = req.body;
 
     if (
-      !Number.isInteger(idSolicitud) ||
+      !Number.isInteger(
+        idSolicitud
+      ) ||
       idSolicitud <= 0 ||
-      !Number.isInteger(idTarea) ||
+      !Number.isInteger(
+        idTarea
+      ) ||
       idTarea <= 0
     ) {
       return res.status(400).json({
@@ -408,6 +466,23 @@ export async function updateTaskStatus(
       });
     }
 
+    /*
+     * Aunque la ruta ya utiliza
+     * authenticateToken, mantenemos
+     * esta validación para no depender
+     * únicamente del middleware.
+     */
+    if (
+      !req.user?.idUsuario ||
+      !req.user.rol
+    ) {
+      return res.status(401).json({
+        status: "error",
+        message:
+          "Usuario no autenticado",
+      });
+    }
+
     const tareaAnterior =
       await getTaskById(
         idSolicitud,
@@ -418,12 +493,21 @@ export async function updateTaskStatus(
       await changeTaskStatus(
         idSolicitud,
         idTarea,
-        estado.trim().toUpperCase()
+        estado
+          .trim()
+          .toUpperCase(),
+        {
+          idUsuario:
+            req.user.idUsuario,
+
+          rol:
+            req.user.rol,
+        }
       );
 
     await registerAudit({
       idUsuario:
-        req.user?.idUsuario,
+        req.user.idUsuario,
 
       entidad:
         "TAREA",
@@ -470,18 +554,33 @@ export async function updateTaskStatus(
 }
 
 
+/*
+ * =========================================================
+ * MANEJO DE ERRORES
+ * =========================================================
+ */
+
 function handleTaskError(
   error: unknown,
   res: Response,
   context: string
 ) {
-  if (error instanceof Error) {
+  if (
+    error instanceof Error
+  ) {
     switch (error.message) {
       case "SOLICITUD_NO_ENCONTRADA":
         return res.status(404).json({
           status: "error",
           message:
             "Solicitud SIA no encontrada",
+        });
+
+      case "SOLICITUD_CERRADA":
+        return res.status(409).json({
+          status: "error",
+          message:
+            "No se pueden modificar tareas de una solicitud finalizada o cancelada",
         });
 
       case "TAREA_NO_ENCONTRADA":
@@ -512,6 +611,20 @@ function handleTaskError(
             "Una subtarea no puede contener nuevas subtareas",
         });
 
+      case "TAREA_PADRE_CERRADA":
+        return res.status(409).json({
+          status: "error",
+          message:
+            "No se pueden agregar subtareas a una tarea madre completada o cancelada",
+        });
+
+      case "TAREA_MADRE_YA_EXISTENTE":
+        return res.status(409).json({
+          status: "error",
+          message:
+            "La solicitud ya posee una tarea madre",
+        });
+
       case "USUARIO_INVALIDO":
         return res.status(400).json({
           status: "error",
@@ -524,6 +637,27 @@ function handleTaskError(
           status: "error",
           message:
             "Estado de tarea inválido",
+        });
+
+      case "TRANSICION_TAREA_INVALIDA":
+        return res.status(409).json({
+          status: "error",
+          message:
+            "El cambio de estado solicitado no está permitido para esta tarea",
+        });
+
+      case "TAREA_CERRADA":
+        return res.status(409).json({
+          status: "error",
+          message:
+            "Una tarea completada o cancelada no puede volver a modificarse",
+        });
+
+      case "TAREA_NO_ASIGNADA_AL_USUARIO":
+        return res.status(403).json({
+          status: "error",
+          message:
+            "No tienes permisos para modificar una tarea asignada a otro usuario",
         });
 
       case "USUARIO_NOTIFICACION_INVALIDO":
