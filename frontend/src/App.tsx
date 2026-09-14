@@ -16,6 +16,12 @@ import SiaCreatePage from "./pages/sia/SiaCreatePage";
 
 import SiaDetailPage from "./pages/sia/SiaDetailPage";
 
+import TransparencyPage
+  from "./pages/transparency/TransparencyPage";
+
+import TransparencyDetailPage
+  from "./pages/transparency/TransparencyDetailPage";
+
 
 function TemporaryPage({
   title,
@@ -83,10 +89,15 @@ export default function App() {
           <Route
             path="/transparency"
             element={
-              <TemporaryPage
-                title="Transparencia Activa"
-              />
+              <TransparencyPage />
             }
+          />
+
+          <Route
+            path="/transparency/:id"
+            element={
+          <TransparencyDetailPage />
+          }
           />
 
           <Route
@@ -128,6 +139,6 @@ export default function App() {
           />
         }
       />
-    </Routes>
+    </Routes> 
   );
 }

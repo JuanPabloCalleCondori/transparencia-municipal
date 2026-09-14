@@ -12,6 +12,7 @@ import {
   uploadLoadFile,
   validateLoad,
   publishLoad,
+  assignmentOptions,
 } from "../controllers/transparency.controller.js";
 
 import {
@@ -37,6 +38,18 @@ const router =
  */
 router.use(
   authenticateToken
+);
+
+router.get(
+  "/assignment-options",
+
+  authorizeRoles(
+    "ADMINISTRADOR_MUNICIPAL",
+    "ENLACE_MUNICIPAL",
+    "DIRECTOR_AREA"
+  ),
+
+  assignmentOptions
 );
 
 
