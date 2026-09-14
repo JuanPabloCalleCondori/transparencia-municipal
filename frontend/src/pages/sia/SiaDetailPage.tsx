@@ -1384,12 +1384,11 @@ export default function SiaDetailPage() {
           
           <SiaTasksSection
               idSolicitud={
-              request.id_solicitud
-            }
-            closed={
-            closed
-            }
-            />
+                request.id_solicitud
+         }
+              closed={closed}
+              users={users}
+        />
         </div>
 
 

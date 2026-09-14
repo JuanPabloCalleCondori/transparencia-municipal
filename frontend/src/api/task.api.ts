@@ -3,6 +3,8 @@ import {
 } from "./api";
 
 import type {
+  AssignTaskRequest,
+  AssignTaskResponse,
   ChangeTaskStatusRequest,
   ChangeTaskStatusResponse,
   CreateSubtaskRequest,
@@ -13,26 +15,19 @@ import type {
 } from "../types/task";
 
 
-/*
- * Obtener todas las tareas
- * asociadas a una solicitud SIA.
- */
 export async function getSiaTasks(
   idSolicitud: number
-): Promise<TaskListResponse> {
+) {
   return apiRequest<TaskListResponse>(
     `/sia/${idSolicitud}/tasks`
   );
 }
 
 
-/*
- * Crear tarea madre.
- */
 export async function createSiaTask(
   idSolicitud: number,
   data: CreateTaskRequest
-): Promise<CreateTaskResponse> {
+) {
   return apiRequest<CreateTaskResponse>(
     `/sia/${idSolicitud}/tasks`,
     {
@@ -43,14 +38,11 @@ export async function createSiaTask(
 }
 
 
-/*
- * Crear subtarea.
- */
 export async function createSiaSubtask(
   idSolicitud: number,
   idTareaPadre: number,
   data: CreateSubtaskRequest
-): Promise<CreateSubtaskResponse> {
+) {
   return apiRequest<CreateSubtaskResponse>(
     `/sia/${idSolicitud}/tasks/${idTareaPadre}/subtasks`,
     {
@@ -61,17 +53,28 @@ export async function createSiaSubtask(
 }
 
 
-/*
- * Cambiar estado de una tarea
- * o subtarea.
- */
 export async function changeSiaTaskStatus(
   idSolicitud: number,
   idTarea: number,
   data: ChangeTaskStatusRequest
-): Promise<ChangeTaskStatusResponse> {
+) {
   return apiRequest<ChangeTaskStatusResponse>(
     `/sia/${idSolicitud}/tasks/${idTarea}/status`,
+    {
+      method: "PATCH",
+      body: JSON.stringify(data),
+    }
+  );
+}
+
+
+export async function assignSiaTask(
+  idSolicitud: number,
+  idTarea: number,
+  data: AssignTaskRequest
+) {
+  return apiRequest<AssignTaskResponse>(
+    `/sia/${idSolicitud}/tasks/${idTarea}/assign`,
     {
       method: "PATCH",
       body: JSON.stringify(data),

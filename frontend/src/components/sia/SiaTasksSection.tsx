@@ -5,6 +5,7 @@ import {
 } from "react";
 
 import {
+  assignSiaTask,
   changeSiaTaskStatus,
   createSiaSubtask,
   createSiaTask,
@@ -12,13 +13,13 @@ import {
 } from "../../api/task.api";
 
 import type {
+  AssignmentUser,
+} from "../../types/sia";
+
+import type {
   SiaTask,
   TaskStatus,
 } from "../../types/task";
-
-import {
-  formatDate,
-} from "../../utils/deadline";
 
 import "./SiaTasksSection.css";
 
@@ -26,6 +27,7 @@ import "./SiaTasksSection.css";
 interface Props {
   idSolicitud: number;
   closed?: boolean;
+  users?: AssignmentUser[];
 }
 
 
@@ -36,15 +38,35 @@ interface TaskFormState {
 }
 
 
-const emptyForm: TaskFormState = {
+const initialForm: TaskFormState = {
   titulo: "",
   descripcion: "",
   fechaVencimiento: "",
 };
 
 
-function formatTaskStatus(
-  status: string
+function formatDate(
+  value?: string | null
+) {
+  if (!value) {
+    return "Sin fecha";
+  }
+
+  return new Intl.DateTimeFormat(
+    "es-CL",
+    {
+      day: "2-digit",
+      month: "2-digit",
+      year: "numeric",
+    }
+  ).format(
+    new Date(value)
+  );
+}
+
+
+function formatStatus(
+  status: TaskStatus
 ) {
   return status.replaceAll(
     "_",
@@ -53,25 +75,34 @@ function formatTaskStatus(
 }
 
 
-function getTaskResponsible(
-  task: SiaTask
-) {
-  if (
-    task.usuario_nombre?.trim()
-  ) {
-    return `${task.usuario_nombre} ${
-      task.usuario_apellido ?? ""
-    }`.trim();
-  }
+function getAvailableStatuses(
+  status: TaskStatus
+): TaskStatus[] {
+  switch (status) {
+    case "PENDIENTE":
+      return [
+        "EN_PROCESO",
+        "CANCELADA",
+      ];
 
-  return "Sin responsable";
+    case "EN_PROCESO":
+      return [
+        "COMPLETADA",
+        "CANCELADA",
+      ];
+
+    default:
+      return [];
+  }
 }
 
 
 export default function SiaTasksSection({
   idSolicitud,
   closed = false,
+  users = [],
 }: Props) {
+
   const [
     tasks,
     setTasks,
@@ -88,47 +119,40 @@ export default function SiaTasksSection({
   ] = useState("");
 
   const [
-    message,
-    setMessage,
+    successMessage,
+    setSuccessMessage,
   ] = useState("");
 
 
   /*
-   * Formulario tarea madre.
+   * Formulario de tarea madre.
    */
   const [
-    showTaskForm,
-    setShowTaskForm,
-  ] = useState(false);
-
-  const [
-    taskForm,
-    setTaskForm,
+    motherForm,
+    setMotherForm,
   ] = useState<TaskFormState>(
-    emptyForm
+    initialForm
   );
 
   const [
-    creatingTask,
-    setCreatingTask,
+    creatingMother,
+    setCreatingMother,
   ] = useState(false);
 
 
   /*
-   * Formulario subtarea.
+   * Formulario de subtarea.
    */
   const [
-    subtaskParentId,
-    setSubtaskParentId,
-  ] = useState<number | null>(
-    null
-  );
+    showSubtaskForm,
+    setShowSubtaskForm,
+  ] = useState(false);
 
   const [
     subtaskForm,
     setSubtaskForm,
   ] = useState<TaskFormState>(
-    emptyForm
+    initialForm
   );
 
   const [
@@ -138,20 +162,35 @@ export default function SiaTasksSection({
 
 
   /*
-   * Estado que está siendo
-   * actualizado.
+   * Estado de operaciones.
    */
   const [
-    changingTaskId,
-    setChangingTaskId,
+    updatingTaskId,
+    setUpdatingTaskId,
+  ] = useState<number | null>(
+    null
+  );
+
+  const [
+    assigningTaskId,
+    setAssigningTaskId,
   ] = useState<number | null>(
     null
   );
 
 
   /*
-   * Cargar tareas.
+   * Responsable seleccionado
+   * por cada tarea.
    */
+  const [
+    selectedUsers,
+    setSelectedUsers,
+  ] = useState<
+    Record<number, string>
+  >({});
+
+
   const loadTasks =
     useCallback(
       async () => {
@@ -166,6 +205,31 @@ export default function SiaTasksSection({
 
           setTasks(
             response.tareas
+          );
+
+          /*
+           * Dejamos seleccionados
+           * los responsables actuales.
+           */
+          const selected:
+            Record<number, string> =
+              {};
+
+          response.tareas.forEach(
+            (task) => {
+              selected[
+                task.id_tarea
+              ] =
+                task.id_usuario_asignado
+                  ? String(
+                      task.id_usuario_asignado
+                    )
+                  : "";
+            }
+          );
+
+          setSelectedUsers(
+            selected
           );
 
         } catch (error) {
@@ -187,19 +251,14 @@ export default function SiaTasksSection({
   }, [loadTasks]);
 
 
-  /*
-   * Tarea madre.
-   */
   const rootTask =
     tasks.find(
       (task) =>
-        task.id_tarea_padre === null
+        task.id_tarea_padre ===
+        null
     ) ?? null;
 
 
-  /*
-   * Subtareas de la tarea madre.
-   */
   const subtasks =
     rootTask
       ? tasks.filter(
@@ -213,74 +272,45 @@ export default function SiaTasksSection({
   /*
    * Crear tarea madre.
    */
-  async function handleCreateTask() {
+  async function handleCreateMotherTask() {
     try {
       setError("");
-      setMessage("");
+      setSuccessMessage("");
 
-      const titulo =
-        taskForm.titulo.trim();
-
-      const descripcion =
-        taskForm.descripcion.trim();
-
-      const fechaVencimiento =
-        taskForm.fechaVencimiento;
-
-
-      if (!titulo) {
+      if (
+        !motherForm.titulo.trim()
+      ) {
         setError(
-          "Debes ingresar el título de la tarea."
+          "Debes ingresar un título para la tarea."
         );
-
         return;
       }
 
-
-      if (!descripcion) {
-        setError(
-          "Debes ingresar una descripción."
-        );
-
-        return;
-      }
-
-
-      if (!fechaVencimiento) {
-        setError(
-          "Debes seleccionar una fecha de vencimiento."
-        );
-
-        return;
-      }
-
-
-      setCreatingTask(true);
-
+      setCreatingMother(true);
 
       const response =
         await createSiaTask(
           idSolicitud,
           {
-            titulo,
-            descripcion,
-            fechaVencimiento,
+            titulo:
+              motherForm.titulo.trim(),
+
+            descripcion:
+              motherForm.descripcion.trim(),
+
+            fechaVencimiento:
+              motherForm.fechaVencimiento,
           }
         );
 
-
-      setTaskForm(
-        emptyForm
-      );
-
-      setShowTaskForm(false);
-
-
-      setMessage(
+      setSuccessMessage(
         response.message ||
           "Tarea creada correctamente."
       );
 
+      setMotherForm(
+        initialForm
+      );
 
       await loadTasks();
 
@@ -291,7 +321,7 @@ export default function SiaTasksSection({
           : "No fue posible crear la tarea."
       );
     } finally {
-      setCreatingTask(false);
+      setCreatingMother(false);
     }
   }
 
@@ -300,82 +330,53 @@ export default function SiaTasksSection({
    * Crear subtarea.
    */
   async function handleCreateSubtask() {
+    if (!rootTask) {
+      return;
+    }
+
     try {
       setError("");
-      setMessage("");
+      setSuccessMessage("");
 
-
-      if (!subtaskParentId) {
-        return;
-      }
-
-
-      const titulo =
-        subtaskForm.titulo.trim();
-
-      const descripcion =
-        subtaskForm.descripcion.trim();
-
-      const fechaVencimiento =
-        subtaskForm.fechaVencimiento;
-
-
-      if (!titulo) {
+      if (
+        !subtaskForm.titulo.trim()
+      ) {
         setError(
-          "Debes ingresar el título de la subtarea."
+          "Debes ingresar un título para la subtarea."
         );
-
         return;
       }
-
-
-      if (!descripcion) {
-        setError(
-          "Debes ingresar una descripción."
-        );
-
-        return;
-      }
-
-
-      if (!fechaVencimiento) {
-        setError(
-          "Debes seleccionar una fecha de vencimiento."
-        );
-
-        return;
-      }
-
 
       setCreatingSubtask(true);
-
 
       const response =
         await createSiaSubtask(
           idSolicitud,
-          subtaskParentId,
+          rootTask.id_tarea,
           {
-            titulo,
-            descripcion,
-            fechaVencimiento,
+            titulo:
+              subtaskForm.titulo.trim(),
+
+            descripcion:
+              subtaskForm.descripcion.trim(),
+
+            fechaVencimiento:
+              subtaskForm.fechaVencimiento,
           }
         );
 
-
-      setSubtaskForm(
-        emptyForm
-      );
-
-      setSubtaskParentId(
-        null
-      );
-
-
-      setMessage(
+      setSuccessMessage(
         response.message ||
           "Subtarea creada correctamente."
       );
 
+      setSubtaskForm(
+        initialForm
+      );
+
+      setShowSubtaskForm(
+        false
+      );
 
       await loadTasks();
 
@@ -386,7 +387,9 @@ export default function SiaTasksSection({
           : "No fue posible crear la subtarea."
       );
     } finally {
-      setCreatingSubtask(false);
+      setCreatingSubtask(
+        false
+      );
     }
   }
 
@@ -396,32 +399,29 @@ export default function SiaTasksSection({
    */
   async function handleStatusChange(
     task: SiaTask,
-    estado: TaskStatus
+    newStatus: TaskStatus
   ) {
     try {
       setError("");
-      setMessage("");
+      setSuccessMessage("");
 
-      setChangingTaskId(
+      setUpdatingTaskId(
         task.id_tarea
       );
-
 
       const response =
         await changeSiaTaskStatus(
           idSolicitud,
           task.id_tarea,
           {
-            estado,
+            estado: newStatus,
           }
         );
 
-
-      setMessage(
+      setSuccessMessage(
         response.message ||
-          "Estado de tarea actualizado correctamente."
+          "Estado actualizado correctamente."
       );
-
 
       await loadTasks();
 
@@ -429,10 +429,10 @@ export default function SiaTasksSection({
       setError(
         error instanceof Error
           ? error.message
-          : "No fue posible cambiar el estado de la tarea."
+          : "No fue posible actualizar el estado."
       );
     } finally {
-      setChangingTaskId(
+      setUpdatingTaskId(
         null
       );
     }
@@ -440,137 +440,88 @@ export default function SiaTasksSection({
 
 
   /*
-   * Render formulario.
+   * Asignar o reasignar
+   * responsable.
    */
-  function renderTaskForm(
-    form: TaskFormState,
-    setForm: React.Dispatch<
-      React.SetStateAction<TaskFormState>
-    >,
-    onSubmit: () => void,
-    loading: boolean,
-    submitText: string,
-    cancel: () => void
+  async function handleAssignResponsible(
+    task: SiaTask
   ) {
-    return (
-      <div className="task-form">
+    try {
+      setError("");
+      setSuccessMessage("");
 
-        <div className="form-group">
-          <label>
-            Título
-          </label>
+      const selected =
+        Number(
+          selectedUsers[
+            task.id_tarea
+          ]
+        );
 
-          <input
-            type="text"
-            value={
-              form.titulo
-            }
-            placeholder="Ej: Recopilar antecedentes financieros"
-            onChange={(event) => {
-              setForm((current) => ({
-                ...current,
-                titulo:
-                  event.target.value,
-              }));
-            }}
-          />
-        </div>
+      if (
+        !Number.isInteger(
+          selected
+        ) ||
+        selected <= 0
+      ) {
+        setError(
+          "Debes seleccionar un responsable."
+        );
+        return;
+      }
 
+      setAssigningTaskId(
+        task.id_tarea
+      );
 
-        <div className="form-group">
-          <label>
-            Descripción
-          </label>
+      const response =
+        await assignSiaTask(
+          idSolicitud,
+          task.id_tarea,
+          {
+            idUsuarioAsignado:
+              selected,
+          }
+        );
 
-          <textarea
-            rows={3}
-            value={
-              form.descripcion
-            }
-            placeholder="Describe el trabajo que debe realizarse..."
-            onChange={(event) => {
-              setForm((current) => ({
-                ...current,
-                descripcion:
-                  event.target.value,
-              }));
-            }}
-          />
-        </div>
+      setSuccessMessage(
+        response.message ||
+          "Responsable actualizado correctamente."
+      );
 
+      await loadTasks();
 
-        <div className="form-group">
-          <label>
-            Fecha de vencimiento
-          </label>
-
-          <input
-            type="date"
-            value={
-              form.fechaVencimiento
-            }
-            onChange={(event) => {
-              setForm((current) => ({
-                ...current,
-                fechaVencimiento:
-                  event.target.value,
-              }));
-            }}
-          />
-        </div>
-
-
-        <div className="task-form-actions">
-
-          <button
-            type="button"
-            className="secondary-button"
-            onClick={
-              cancel
-            }
-            disabled={
-              loading
-            }
-          >
-            Cancelar
-          </button>
-
-
-          <button
-            type="button"
-            className="primary-button"
-            onClick={
-              onSubmit
-            }
-            disabled={
-              loading
-            }
-          >
-            {loading
-              ? "Guardando..."
-              : submitText}
-          </button>
-
-        </div>
-
-      </div>
-    );
+    } catch (error) {
+      setError(
+        error instanceof Error
+          ? error.message
+          : "No fue posible asignar el responsable."
+      );
+    } finally {
+      setAssigningTaskId(
+        null
+      );
+    }
   }
 
 
-  /*
-   * Render tarjeta de tarea.
-   */
   function renderTask(
     task: SiaTask,
-    isRoot: boolean
+    isSubtask = false
   ) {
     const responsible =
-      getTaskResponsible(
-        task
+      task.usuario_nombre
+        ? `${task.usuario_nombre} ${
+            task.usuario_apellido ??
+            ""
+          }`.trim()
+        : "Sin responsable";
+
+    const availableStatuses =
+      getAvailableStatuses(
+        task.estado
       );
 
-    const taskClosed =
+    const isFinished =
       [
         "COMPLETADA",
         "CANCELADA",
@@ -578,40 +529,35 @@ export default function SiaTasksSection({
         task.estado
       );
 
-
     return (
-      <div
+      <article
         key={task.id_tarea}
-        className={
-          isRoot
-            ? "sia-task-card sia-task-root"
-            : "sia-task-card sia-subtask-card"
-        }
+        className={`sia-task-card ${
+          isSubtask
+            ? "sia-subtask-card"
+            : ""
+        }`}
       >
-
         <div className="sia-task-header">
-
           <div>
-            <div className="sia-task-type">
-              {isRoot
-                ? "Tarea principal"
-                : "Subtarea"}
-            </div>
+            <span className="sia-task-type">
+              {isSubtask
+                ? "Subtarea"
+                : "Tarea madre"}
+            </span>
 
             <h4>
               {task.titulo}
             </h4>
           </div>
 
-
           <span
-            className={`task-status task-status-${task.estado.toLowerCase()}`}
+            className={`sia-task-status task-status-${task.estado.toLowerCase()}`}
           >
-            {formatTaskStatus(
+            {formatStatus(
               task.estado
             )}
           </span>
-
         </div>
 
 
@@ -622,8 +568,7 @@ export default function SiaTasksSection({
         )}
 
 
-        <div className="sia-task-meta">
-
+        <div className="sia-task-metadata">
           <div>
             <span>
               Responsable
@@ -634,18 +579,16 @@ export default function SiaTasksSection({
             </strong>
           </div>
 
-
           <div>
             <span>
               Departamento
             </span>
 
             <strong>
-              {task.departamento ||
+              {task.departamento ??
                 "Sin departamento"}
             </strong>
           </div>
-
 
           <div>
             <span>
@@ -653,179 +596,204 @@ export default function SiaTasksSection({
             </span>
 
             <strong>
-              {task.fecha_vencimiento
-                ? formatDate(
-                    task.fecha_vencimiento
-                  )
-                : "Sin fecha"}
+              {formatDate(
+                task.fecha_vencimiento
+              )}
             </strong>
           </div>
-
         </div>
 
 
-        {!closed &&
-          !taskClosed && (
-            <div className="sia-task-actions">
+        {!closed && (
+          <div className="sia-task-actions">
 
-              <label>
-                Estado
+            {/* RESPONSABLE */}
+            {!isFinished &&
+              users.length > 0 && (
+                <div className="sia-task-action-group">
 
-                <select
-                  value={
-                    task.estado
-                  }
-                  disabled={
-                    changingTaskId ===
-                    task.id_tarea
-                  }
-                  onChange={(event) => {
-                    handleStatusChange(
-                      task,
-                      event.target
-                        .value as TaskStatus
-                    );
-                  }}
-                >
-
-                  <option
-                    value={
-                      task.estado
-                    }
+                  <label
+                    htmlFor={`task-user-${task.id_tarea}`}
                   >
-                    {formatTaskStatus(
-                      task.estado
-                    )}
-                  </option>
+                    Responsable
+                  </label>
 
+                  <div className="sia-task-assignment-row">
+                    <select
+                      id={`task-user-${task.id_tarea}`}
+                      value={
+                        selectedUsers[
+                          task.id_tarea
+                        ] ?? ""
+                      }
+                      onChange={(
+                        event
+                      ) =>
+                        setSelectedUsers(
+                          (current) => ({
+                            ...current,
 
-                  {task.estado ===
-                    "PENDIENTE" && (
-                    <>
-                      <option value="EN_PROCESO">
-                        EN PROCESO
+                            [task.id_tarea]:
+                              event.target
+                                .value,
+                          })
+                        )
+                      }
+                      disabled={
+                        assigningTaskId ===
+                        task.id_tarea
+                      }
+                    >
+                      <option value="">
+                        Seleccionar responsable
                       </option>
 
-                      <option value="CANCELADA">
-                        CANCELADA
-                      </option>
-                    </>
-                  )}
+                      {users.map(
+                        (user) => (
+                          <option
+                            key={
+                              user.id_usuario
+                            }
+                            value={
+                              user.id_usuario
+                            }
+                          >
+                            {user.nombre}{" "}
+                            {user.apellido}
+                            {user.departamento
+                              ? ` — ${user.departamento}`
+                              : ""}
+                          </option>
+                        )
+                      )}
+                    </select>
 
-
-                  {task.estado ===
-                    "EN_PROCESO" && (
-                    <>
-                      <option value="COMPLETADA">
-                        COMPLETADA
-                      </option>
-
-                      <option value="CANCELADA">
-                        CANCELADA
-                      </option>
-                    </>
-                  )}
-
-                </select>
-              </label>
-
-
-              {isRoot && (
-                <button
-                  type="button"
-                  className="secondary-button"
-                  onClick={() => {
-                    setSubtaskParentId(
+                    <button
+                      type="button"
+                      className="secondary-button"
+                      onClick={() =>
+                        handleAssignResponsible(
+                          task
+                        )
+                      }
+                      disabled={
+                        assigningTaskId ===
+                          task.id_tarea ||
+                        !selectedUsers[
+                          task.id_tarea
+                        ]
+                      }
+                    >
+                      {assigningTaskId ===
                       task.id_tarea
-                    );
-
-                    setSubtaskForm(
-                      emptyForm
-                    );
-
-                    setError("");
-                    setMessage("");
-                  }}
-                >
-                  + Crear subtarea
-                </button>
+                        ? "Guardando..."
+                        : task.id_usuario_asignado
+                        ? "Reasignar"
+                        : "Asignar"}
+                    </button>
+                  </div>
+                </div>
               )}
 
-            </div>
-          )}
 
+            {/* ESTADO */}
+            {!isFinished &&
+              availableStatuses.length >
+                0 && (
+                <div className="sia-task-action-group">
+                  <label
+                    htmlFor={`task-status-${task.id_tarea}`}
+                  >
+                    Cambiar estado
+                  </label>
 
-        {isRoot &&
-          subtaskParentId ===
-            task.id_tarea && (
-            <div className="subtask-form-container">
+                  <select
+                    id={`task-status-${task.id_tarea}`}
+                    value=""
+                    disabled={
+                      updatingTaskId ===
+                      task.id_tarea
+                    }
+                    onChange={(
+                      event
+                    ) => {
+                      const value =
+                        event.target
+                          .value as TaskStatus;
 
-              <h4>
-                Nueva subtarea
-              </h4>
+                      if (value) {
+                        handleStatusChange(
+                          task,
+                          value
+                        );
+                      }
+                    }}
+                  >
+                    <option value="">
+                      Seleccionar estado
+                    </option>
 
-              {renderTaskForm(
-                subtaskForm,
-                setSubtaskForm,
-                handleCreateSubtask,
-                creatingSubtask,
-                "Crear subtarea",
-                () => {
-                  setSubtaskParentId(
-                    null
-                  );
-
-                  setSubtaskForm(
-                    emptyForm
-                  );
-                }
+                    {availableStatuses.map(
+                      (status) => (
+                        <option
+                          key={status}
+                          value={status}
+                        >
+                          {formatStatus(
+                            status
+                          )}
+                        </option>
+                      )
+                    )}
+                  </select>
+                </div>
               )}
+          </div>
+        )}
 
+
+        {!isSubtask &&
+          !closed && (
+            <div className="sia-task-footer">
+              <button
+                type="button"
+                className="secondary-button"
+                onClick={() => {
+                  setShowSubtaskForm(
+                    (current) =>
+                      !current
+                  );
+
+                  setError("");
+                  setSuccessMessage("");
+                }}
+              >
+                {showSubtaskForm
+                  ? "Cancelar subtarea"
+                  : "+ Crear subtarea"}
+              </button>
             </div>
           )}
-
-      </div>
+      </article>
     );
   }
 
 
   return (
-    <div className="content-card sia-tasks-section">
+    <section className="sia-tasks-section">
 
-      <div className="sia-tasks-heading">
-
+      <div className="detail-section-title">
         <div>
-          <h2>
+          <h3>
             Tareas de la solicitud
-          </h2>
+          </h3>
 
           <p>
-            Gestión interna de tareas
-            y subtareas asociadas a
-            esta solicitud.
+            Gestión de tarea madre,
+            subtareas, responsables y
+            estados internos.
           </p>
         </div>
-
-
-        {!closed &&
-          !rootTask &&
-          !showTaskForm && (
-            <button
-              type="button"
-              className="primary-button"
-              onClick={() => {
-                setShowTaskForm(
-                  true
-                );
-
-                setError("");
-                setMessage("");
-              }}
-            >
-              + Crear tarea principal
-            </button>
-          )}
-
       </div>
 
 
@@ -836,91 +804,314 @@ export default function SiaTasksSection({
       )}
 
 
-      {message && (
+      {successMessage && (
         <div className="form-success">
-          {message}
+          {successMessage}
         </div>
       )}
 
 
-      {showTaskForm &&
-        !rootTask && (
-          <div className="task-create-container">
+      {loading && (
+        <div className="table-message">
+          Cargando tareas...
+        </div>
+      )}
 
-            <h3>
-              Nueva tarea principal
-            </h3>
 
-            {renderTaskForm(
-              taskForm,
-              setTaskForm,
-              handleCreateTask,
-              creatingTask,
-              "Crear tarea",
-              () => {
-                setShowTaskForm(
-                  false
-                );
+      {!loading &&
+        !rootTask &&
+        !closed && (
+          <div className="sia-task-create-form">
 
-                setTaskForm(
-                  emptyForm
-                );
+            <h4>
+              Crear tarea madre
+            </h4>
+
+            <div className="form-group">
+              <label htmlFor="mother-title">
+                Título
+              </label>
+
+              <input
+                id="mother-title"
+                type="text"
+                value={
+                  motherForm.titulo
+                }
+                onChange={(
+                  event
+                ) =>
+                  setMotherForm(
+                    (current) => ({
+                      ...current,
+                      titulo:
+                        event.target
+                          .value,
+                    })
+                  )
+                }
+                placeholder="Ej. Gestionar respuesta de solicitud"
+              />
+            </div>
+
+
+            <div className="form-group">
+              <label htmlFor="mother-description">
+                Descripción
+              </label>
+
+              <textarea
+                id="mother-description"
+                value={
+                  motherForm.descripcion
+                }
+                onChange={(
+                  event
+                ) =>
+                  setMotherForm(
+                    (current) => ({
+                      ...current,
+                      descripcion:
+                        event.target
+                          .value,
+                    })
+                  )
+                }
+                rows={3}
+              />
+            </div>
+
+
+            <div className="form-group">
+              <label htmlFor="mother-date">
+                Fecha de vencimiento
+              </label>
+
+              <input
+                id="mother-date"
+                type="date"
+                value={
+                  motherForm
+                    .fechaVencimiento
+                }
+                onChange={(
+                  event
+                ) =>
+                  setMotherForm(
+                    (current) => ({
+                      ...current,
+                      fechaVencimiento:
+                        event.target
+                          .value,
+                    })
+                  )
+                }
+              />
+            </div>
+
+
+            <button
+              type="button"
+              className="primary-button"
+              onClick={
+                handleCreateMotherTask
               }
-            )}
-
+              disabled={
+                creatingMother
+              }
+            >
+              {creatingMother
+                ? "Creando..."
+                : "Crear tarea madre"}
+            </button>
           </div>
         )}
 
 
-      {loading ? (
-        <div className="table-message">
-          Cargando tareas...
-        </div>
-      ) : tasks.length === 0 ? (
-        <div className="sia-task-empty">
-
-          <strong>
-            No existen tareas registradas.
-          </strong>
-
-          <span>
-            La solicitud todavía no
-            cuenta con una tarea principal.
-          </span>
-
-        </div>
-      ) : (
-        <div className="sia-task-tree">
-
-          {rootTask &&
-            renderTask(
-              rootTask,
-              true
+      {!loading &&
+        rootTask && (
+          <>
+            {renderTask(
+              rootTask
             )}
 
 
-          {subtasks.length >
-            0 && (
-            <div className="sia-subtasks">
+            {showSubtaskForm &&
+              !closed && (
+                <div className="sia-task-create-form sia-subtask-create-form">
 
-              <div className="sia-subtasks-title">
-                Subtareas
-              </div>
+                  <h4>
+                    Nueva subtarea
+                  </h4>
 
-              {subtasks.map(
-                (task) =>
-                  renderTask(
-                    task,
-                    false
-                  )
+                  <div className="form-group">
+                    <label htmlFor="subtask-title">
+                      Título
+                    </label>
+
+                    <input
+                      id="subtask-title"
+                      type="text"
+                      value={
+                        subtaskForm
+                          .titulo
+                      }
+                      onChange={(
+                        event
+                      ) =>
+                        setSubtaskForm(
+                          (
+                            current
+                          ) => ({
+                            ...current,
+
+                            titulo:
+                              event
+                                .target
+                                .value,
+                          })
+                        )
+                      }
+                    />
+                  </div>
+
+
+                  <div className="form-group">
+                    <label htmlFor="subtask-description">
+                      Descripción
+                    </label>
+
+                    <textarea
+                      id="subtask-description"
+                      rows={3}
+                      value={
+                        subtaskForm
+                          .descripcion
+                      }
+                      onChange={(
+                        event
+                      ) =>
+                        setSubtaskForm(
+                          (
+                            current
+                          ) => ({
+                            ...current,
+
+                            descripcion:
+                              event
+                                .target
+                                .value,
+                          })
+                        )
+                      }
+                    />
+                  </div>
+
+
+                  <div className="form-group">
+                    <label htmlFor="subtask-date">
+                      Fecha de vencimiento
+                    </label>
+
+                    <input
+                      id="subtask-date"
+                      type="date"
+                      value={
+                        subtaskForm
+                          .fechaVencimiento
+                      }
+                      onChange={(
+                        event
+                      ) =>
+                        setSubtaskForm(
+                          (
+                            current
+                          ) => ({
+                            ...current,
+
+                            fechaVencimiento:
+                              event
+                                .target
+                                .value,
+                          })
+                        )
+                      }
+                    />
+                  </div>
+
+
+                  <div className="sia-task-form-actions">
+                    <button
+                      type="button"
+                      className="primary-button"
+                      onClick={
+                        handleCreateSubtask
+                      }
+                      disabled={
+                        creatingSubtask
+                      }
+                    >
+                      {creatingSubtask
+                        ? "Creando..."
+                        : "Crear subtarea"}
+                    </button>
+
+                    <button
+                      type="button"
+                      className="secondary-button"
+                      onClick={() => {
+                        setShowSubtaskForm(
+                          false
+                        );
+
+                        setSubtaskForm(
+                          initialForm
+                        );
+                      }}
+                    >
+                      Cancelar
+                    </button>
+                  </div>
+                </div>
               )}
 
-            </div>
-          )}
 
-        </div>
-      )}
+            {subtasks.length >
+              0 && (
+              <div className="sia-subtasks-list">
 
-    </div>
+                <div className="sia-subtasks-heading">
+                  <span>
+                    Subtareas
+                  </span>
+
+                  <strong>
+                    {subtasks.length}
+                  </strong>
+                </div>
+
+                {subtasks.map(
+                  (task) =>
+                    renderTask(
+                      task,
+                      true
+                    )
+                )}
+              </div>
+            )}
+          </>
+        )}
+
+
+      {!loading &&
+        rootTask &&
+        subtasks.length ===
+          0 && (
+          <div className="sia-task-empty">
+            Esta tarea todavía no tiene
+            subtareas.
+          </div>
+        )}
+    </section>
   );
 }

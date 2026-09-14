@@ -8,12 +8,10 @@ export type TaskStatus =
 export interface SiaTask {
   id_tarea: number;
   id_solicitud: number;
-
   id_tarea_padre: number | null;
 
   titulo: string;
   descripcion: string | null;
-
   estado: TaskStatus;
 
   fecha_asignacion: string;
@@ -72,6 +70,18 @@ export interface ChangeTaskStatusRequest {
 
 
 export interface ChangeTaskStatusResponse {
+  status: string;
+  message: string;
+  tarea: SiaTask;
+}
+
+
+export interface AssignTaskRequest {
+  idUsuarioAsignado: number;
+}
+
+
+export interface AssignTaskResponse {
   status: string;
   message: string;
   tarea: SiaTask;
