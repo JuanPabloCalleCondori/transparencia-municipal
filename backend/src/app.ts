@@ -11,6 +11,8 @@ import taskRoutes from "./routes/task.routes.js";
 import commentRoutes from "./routes/comment.routes.js";
 import documentRoutes from "./routes/document.routes.js";
 
+import transparencyRoutes from "./routes/transparency.routes.js";
+
 const app = express();
 
 app.use(cors());
@@ -27,5 +29,7 @@ app.use("/api/sia/:id/tasks", taskRoutes);
 app.use("/api/sia/:id/comments", commentRoutes);
 
 app.use("/api/sia/:id/documents", documentRoutes);
+
+app.use("/api/transparency", transparencyRoutes);
 
 export default app;
