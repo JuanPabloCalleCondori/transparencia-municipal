@@ -91,3 +91,13 @@ export interface AssignSiaResponse {
   message: string;
   solicitud: SiaRequest;
 }
+
+export interface ChangeSiaStatusRequest {
+  idEstado: number;
+}
+
+export interface ChangeSiaStatusResponse {
+  status: string;
+  message: string;
+  solicitud: SiaRequest;
+}

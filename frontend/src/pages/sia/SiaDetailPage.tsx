@@ -10,6 +10,7 @@ import {
 
 import {
   assignSiaRequest,
+  changeSiaStatus,
   getAssignmentOptions,
   getSiaRequestById,
 } from "../../api/sia.api";
@@ -48,6 +49,9 @@ export default function SiaDetailPage() {
     useParams();
 
 
+  /*
+   * Solicitud.
+   */
   const [
     request,
     setRequest,
@@ -95,8 +99,8 @@ export default function SiaDetailPage() {
 
 
   /*
-   * Estado del proceso de
-   * asignación.
+   * Estado del proceso
+   * de asignación.
    */
   const [
     assigning,
@@ -111,6 +115,31 @@ export default function SiaDetailPage() {
   const [
     assignmentError,
     setAssignmentError,
+  ] = useState("");
+
+
+  /*
+   * Estado del proceso
+   * de cambio de estado.
+   */
+  const [
+    selectedStatus,
+    setSelectedStatus,
+  ] = useState("");
+
+  const [
+    changingStatus,
+    setChangingStatus,
+  ] = useState(false);
+
+  const [
+    statusMessage,
+    setStatusMessage,
+  ] = useState("");
+
+  const [
+    statusError,
+    setStatusError,
   ] = useState("");
 
 
@@ -136,6 +165,7 @@ export default function SiaDetailPage() {
             "ID de solicitud inválido"
           );
         }
+
 
         /*
          * Cargamos el detalle
@@ -169,10 +199,8 @@ export default function SiaDetailPage() {
 
 
         /*
-         * Si la solicitud ya tiene
-         * asignación, dejamos los
-         * select posicionados en
-         * esos valores.
+         * Sincronizamos los select
+         * con la asignación actual.
          */
         if (
           response.solicitud
@@ -202,6 +230,7 @@ export default function SiaDetailPage() {
         } else {
           setSelectedResponsible("");
         }
+
       } catch (error) {
         setError(
           error instanceof Error
@@ -218,8 +247,8 @@ export default function SiaDetailPage() {
 
 
   /*
-   * Usuarios pertenecientes al
-   * departamento seleccionado.
+   * Usuarios pertenecientes
+   * al departamento seleccionado.
    */
   const filteredUsers =
     users.filter(
@@ -233,117 +262,200 @@ export default function SiaDetailPage() {
 
   /*
    * Asignar o reasignar
-   * la solicitud.
+   * solicitud.
    */
   async function handleAssign() {
-  try {
-    setAssignmentError("");
-    setAssignmentMessage("");
+    try {
+      setAssignmentError("");
+      setAssignmentMessage("");
 
-    if (!request) {
-      return;
-    }
+      if (!request) {
+        return;
+      }
 
-    const idDepartamento =
-      Number(
-        selectedDepartment
+      const idDepartamento =
+        Number(
+          selectedDepartment
+        );
+
+      const idResponsable =
+        Number(
+          selectedResponsible
+        );
+
+
+      if (
+        !Number.isInteger(
+          idDepartamento
+        ) ||
+        idDepartamento <= 0 ||
+        !Number.isInteger(
+          idResponsable
+        ) ||
+        idResponsable <= 0
+      ) {
+        setAssignmentError(
+          "Debes seleccionar un departamento y un responsable."
+        );
+
+        return;
+      }
+
+
+      setAssigning(true);
+
+
+      /*
+       * Ejecutamos la asignación.
+       */
+      const assignmentResponse =
+        await assignSiaRequest(
+          request.id_solicitud,
+          {
+            idDepartamento,
+            idResponsable,
+          }
+        );
+
+
+      /*
+       * Consultamos nuevamente
+       * el detalle completo.
+       */
+      const detailResponse =
+        await getSiaRequestById(
+          request.id_solicitud
+        );
+
+      setRequest(
+        detailResponse.solicitud
       );
 
-    const idResponsable =
-      Number(
-        selectedResponsible
+
+      /*
+       * Sincronizamos select.
+       */
+      if (
+        detailResponse.solicitud
+          .id_departamento
+      ) {
+        setSelectedDepartment(
+          String(
+            detailResponse.solicitud
+              .id_departamento
+          )
+        );
+      }
+
+
+      if (
+        detailResponse.solicitud
+          .id_responsable
+      ) {
+        setSelectedResponsible(
+          String(
+            detailResponse.solicitud
+              .id_responsable
+          )
+        );
+      }
+
+
+      setAssignmentMessage(
+        assignmentResponse.message ||
+          "Solicitud asignada correctamente."
       );
 
-    if (
-      !Number.isInteger(
-        idDepartamento
-      ) ||
-      idDepartamento <= 0 ||
-      !Number.isInteger(
-        idResponsable
-      ) ||
-      idResponsable <= 0
-    ) {
+    } catch (error) {
       setAssignmentError(
-        "Debes seleccionar un departamento y un responsable."
+        error instanceof Error
+          ? error.message
+          : "No fue posible asignar la solicitud."
       );
-
-      return;
+    } finally {
+      setAssigning(false);
     }
-
-    setAssigning(true);
-
-    /*
-     * Realizamos la asignación.
-     */
-    const assignmentResponse =
-      await assignSiaRequest(
-        request.id_solicitud,
-        {
-          idDepartamento,
-          idResponsable,
-        }
-      );
-
-    /*
-     * Volvemos a consultar el detalle
-     * completo porque el PATCH puede
-     * devolver solo los datos base y no
-     * los nombres de estado, departamento
-     * y responsable.
-     */
-    const detailResponse =
-      await getSiaRequestById(
-        request.id_solicitud
-      );
-
-    setRequest(
-      detailResponse.solicitud
-    );
-
-    /*
-     * Sincronizamos los select con
-     * los datos recién guardados.
-     */
-    if (
-      detailResponse.solicitud
-        .id_departamento
-    ) {
-      setSelectedDepartment(
-        String(
-          detailResponse.solicitud
-            .id_departamento
-        )
-      );
-    }
-
-    if (
-      detailResponse.solicitud
-        .id_responsable
-    ) {
-      setSelectedResponsible(
-        String(
-          detailResponse.solicitud
-            .id_responsable
-        )
-      );
-    }
-
-    setAssignmentMessage(
-      assignmentResponse.message ||
-        "Solicitud asignada correctamente."
-    );
-  } catch (error) {
-    setAssignmentError(
-      error instanceof Error
-        ? error.message
-        : "No fue posible asignar la solicitud."
-    );
-  } finally {
-    setAssigning(false);
   }
-}
 
+
+  /*
+   * Cambiar estado.
+   */
+  async function handleChangeStatus() {
+    try {
+      setStatusError("");
+      setStatusMessage("");
+
+      if (!request) {
+        return;
+      }
+
+      const idEstado =
+        Number(
+          selectedStatus
+        );
+
+
+      if (
+        !Number.isInteger(
+          idEstado
+        ) ||
+        idEstado <= 0
+      ) {
+        setStatusError(
+          "Debes seleccionar un nuevo estado."
+        );
+
+        return;
+      }
+
+
+      setChangingStatus(true);
+
+
+      /*
+       * Ejecutamos cambio de estado.
+       */
+      const statusResponse =
+        await changeSiaStatus(
+          request.id_solicitud,
+          {
+            idEstado,
+          }
+        );
+
+
+      /*
+       * Volvemos a consultar el
+       * detalle completo.
+       */
+      const detailResponse =
+        await getSiaRequestById(
+          request.id_solicitud
+        );
+
+      setRequest(
+        detailResponse.solicitud
+      );
+
+      setSelectedStatus("");
+
+
+      setStatusMessage(
+        statusResponse.message ||
+          "Estado actualizado correctamente."
+      );
+
+    } catch (error) {
+      setStatusError(
+        error instanceof Error
+          ? error.message
+          : "No fue posible cambiar el estado."
+      );
+    } finally {
+      setChangingStatus(false);
+    }
+  }
 
 
   /*
@@ -404,6 +516,9 @@ export default function SiaDetailPage() {
   }
 
 
+  /*
+   * Estados terminales.
+   */
   const closed =
     [
       "FINALIZADA",
@@ -413,6 +528,9 @@ export default function SiaDetailPage() {
     );
 
 
+  /*
+   * Plazo.
+   */
   const deadline =
     request.fecha_vencimiento
       ? getDeadlineStatus(
@@ -421,20 +539,36 @@ export default function SiaDetailPage() {
       : null;
 
 
+  /*
+   * Responsable.
+   *
+   * El listado SIA y el detalle
+   * actualmente utilizan estructuras
+   * ligeramente diferentes.
+   */
   const responsible =
     request.responsable_nombre?.trim()
-      ? `${request.responsable_nombre} ${request.responsable_apellido ?? ""}`.trim()
+      ? `${request.responsable_nombre} ${
+          request.responsable_apellido ??
+          ""
+        }`.trim()
       : request.responsable?.trim()
       ? request.responsable
       : "Sin responsable";
 
 
+  /*
+   * Departamento.
+   */
   const department =
     request.departamento?.trim()
       ? request.departamento
       : "Sin asignar";
 
 
+  /*
+   * Clase CSS del estado.
+   */
   const stateClass =
     (
       request.estado ??
@@ -442,10 +576,71 @@ export default function SiaDetailPage() {
     ).toLowerCase();
 
 
+  /*
+   * Transiciones disponibles.
+   *
+   * El backend continúa siendo
+   * la fuente definitiva para
+   * validar las transiciones.
+   */
+  const statusTransitions: Record<
+    string,
+    {
+      id: number;
+      name: string;
+    }[]
+  > = {
+    ASIGNADA: [
+      {
+        id: 3,
+        name: "EN PROCESO",
+      },
+      {
+        id: 7,
+        name: "CANCELADA",
+      },
+    ],
+
+    EN_PROCESO: [
+      {
+        id: 4,
+        name: "EN REVISIÓN",
+      },
+      {
+        id: 7,
+        name: "CANCELADA",
+      },
+    ],
+
+    EN_REVISION: [
+      {
+        id: 5,
+        name: "FINALIZADA",
+      },
+      {
+        id: 3,
+        name: "VOLVER A EN PROCESO",
+      },
+      {
+        id: 7,
+        name: "CANCELADA",
+      },
+    ],
+  };
+
+
+  const availableStatuses =
+    statusTransitions[
+      request.estado
+    ] ?? [];
+
+
   return (
     <section>
 
-      {/* ENCABEZADO */}
+      {/* =========================
+          ENCABEZADO
+          ========================= */}
       <div className="page-heading">
         <div>
           <button
@@ -485,16 +680,20 @@ export default function SiaDetailPage() {
 
       <div className="sia-detail-grid">
 
-        {/* COLUMNA PRINCIPAL */}
+        {/* =========================
+            COLUMNA PRINCIPAL
+            ========================= */}
         <div className="sia-detail-main">
 
-          {/* INFORMACIÓN SOLICITUD */}
+
+          {/* INFORMACIÓN */}
           <div className="content-card">
             <div className="detail-section-title">
               <h2>
                 Información de la solicitud
               </h2>
             </div>
+
 
             <div className="detail-data-grid">
 
@@ -562,8 +761,11 @@ export default function SiaDetailPage() {
           </div>
 
 
-          {/* GESTIÓN INTERNA */}
+          {/* =========================
+              GESTIÓN INTERNA
+              ========================= */}
           <div className="content-card">
+
             <div className="detail-section-title">
               <h2>
                 Gestión interna
@@ -623,7 +825,9 @@ export default function SiaDetailPage() {
             </div>
 
 
-            {/* ASIGNACIÓN */}
+            {/* =========================
+                ASIGNACIÓN
+                ========================= */}
             {!closed && (
               <div className="assignment-section">
 
@@ -654,11 +858,6 @@ export default function SiaDetailPage() {
                           event.target.value
                         );
 
-                        /*
-                         * Si cambia el
-                         * departamento,
-                         * limpiamos responsable.
-                         */
                         setSelectedResponsible(
                           ""
                         );
@@ -755,7 +954,6 @@ export default function SiaDetailPage() {
                 </div>
 
 
-                {/* SIN FUNCIONARIOS */}
                 {selectedDepartment &&
                   filteredUsers.length ===
                     0 && (
@@ -767,7 +965,6 @@ export default function SiaDetailPage() {
                   )}
 
 
-                {/* ERROR */}
                 {assignmentError && (
                   <div className="form-error">
                     {assignmentError}
@@ -775,7 +972,6 @@ export default function SiaDetailPage() {
                 )}
 
 
-                {/* ÉXITO */}
                 {assignmentMessage && (
                   <div className="form-success">
                     {assignmentMessage}
@@ -783,7 +979,6 @@ export default function SiaDetailPage() {
                 )}
 
 
-                {/* BOTÓN */}
                 <div className="assignment-actions">
                   <button
                     type="button"
@@ -808,11 +1003,114 @@ export default function SiaDetailPage() {
               </div>
             )}
 
+
+            {/* =========================
+                CAMBIO DE ESTADO
+                ========================= */}
+            {!closed &&
+              availableStatuses.length >
+                0 && (
+                <div className="status-management-section">
+
+                  <div className="detail-section-title">
+                    <h3>
+                      Cambiar estado
+                    </h3>
+                  </div>
+
+
+                  <div className="status-management-row">
+
+                    <div className="form-group">
+                      <label
+                        htmlFor="sia-status"
+                      >
+                        Nuevo estado
+                      </label>
+
+                      <select
+                        id="sia-status"
+                        value={
+                          selectedStatus
+                        }
+                        onChange={(event) => {
+                          setSelectedStatus(
+                            event.target.value
+                          );
+
+                          setStatusError(
+                            ""
+                          );
+
+                          setStatusMessage(
+                            ""
+                          );
+                        }}
+                      >
+                        <option value="">
+                          Seleccionar estado
+                        </option>
+
+                        {availableStatuses.map(
+                          (status) => (
+                            <option
+                              key={
+                                status.id
+                              }
+                              value={
+                                status.id
+                              }
+                            >
+                              {status.name}
+                            </option>
+                          )
+                        )}
+                      </select>
+                    </div>
+
+
+                    <button
+                      type="button"
+                      className="primary-button"
+                      onClick={
+                        handleChangeStatus
+                      }
+                      disabled={
+                        changingStatus ||
+                        !selectedStatus
+                      }
+                    >
+                      {changingStatus
+                        ? "Actualizando..."
+                        : "Actualizar estado"}
+                    </button>
+
+                  </div>
+
+
+                  {statusError && (
+                    <div className="form-error">
+                      {statusError}
+                    </div>
+                  )}
+
+
+                  {statusMessage && (
+                    <div className="form-success">
+                      {statusMessage}
+                    </div>
+                  )}
+
+                </div>
+              )}
+
           </div>
         </div>
 
 
-        {/* SIDEBAR */}
+        {/* =========================
+            SIDEBAR
+            ========================= */}
         <aside className="sia-detail-sidebar">
 
           {/* PLAZO */}
@@ -889,6 +1187,7 @@ export default function SiaDetailPage() {
 
           {/* IDENTIFICACIÓN */}
           <div className="content-card detail-status-card">
+
             <span>
               Folio
             </span>
@@ -904,6 +1203,7 @@ export default function SiaDetailPage() {
             <strong>
               #{request.id_solicitud}
             </strong>
+
           </div>
 
         </aside>

@@ -6,6 +6,8 @@ import type {
   AssignSiaRequest,
   AssignSiaResponse,
   AssignmentOptionsResponse,
+  ChangeSiaStatusRequest,
+  ChangeSiaStatusResponse,
   CreateSiaRequest,
   CreateSiaResponse,
   SiaDetailResponse,
@@ -66,6 +68,19 @@ export async function assignSiaRequest(
 ): Promise<AssignSiaResponse> {
   return apiRequest<AssignSiaResponse>(
     `/sia/${idSolicitud}/assign`,
+    {
+      method: "PATCH",
+      body: JSON.stringify(data),
+    }
+  );
+}
+
+export async function changeSiaStatus(
+  idSolicitud: number,
+  data: ChangeSiaStatusRequest
+): Promise<ChangeSiaStatusResponse> {
+  return apiRequest<ChangeSiaStatusResponse>(
+    `/sia/${idSolicitud}/status`,
     {
       method: "PATCH",
       body: JSON.stringify(data),
