@@ -25,6 +25,9 @@ import TransparencyDetailPage
 import UsersPage
   from "./pages/users/UsersPage";
 
+import NotificationsPage
+  from "./pages/notifications/NotificationsPage";
+
 
 function TemporaryPage({
   title,
@@ -113,9 +116,7 @@ export default function App() {
           <Route
             path="/notifications"
             element={
-              <TemporaryPage
-                title="Notificaciones"
-              />
+                <NotificationsPage />
             }
           />
         </Route>
