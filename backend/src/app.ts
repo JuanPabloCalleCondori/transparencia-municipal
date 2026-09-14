@@ -9,6 +9,7 @@ import siaRoutes from "./routes/sia.routes.js";
 import taskRoutes from "./routes/task.routes.js";
 
 import commentRoutes from "./routes/comment.routes.js";
+import documentRoutes from "./routes/document.routes.js";
 
 const app = express();
 
@@ -24,5 +25,7 @@ app.use("/api/sia", siaRoutes);
 app.use("/api/sia/:id/tasks", taskRoutes);
 
 app.use("/api/sia/:id/comments", commentRoutes);
+
+app.use("/api/sia/:id/documents", documentRoutes);
 
 export default app;

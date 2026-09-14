@@ -3,9 +3,11 @@ import {
 } from "express";
 
 import {
-  create,
+  upload,
   list,
-} from "../controllers/comment.controller.js";
+  download,
+  remove,
+} from "../controllers/document.controller.js";
 
 import {
   authenticateToken,
@@ -14,6 +16,10 @@ import {
 import {
   authorizeRoles,
 } from "../middlewares/role.middleware.js";
+
+import {
+  uploadSiaDocument,
+} from "../config/upload.js";
 
 
 const router =
@@ -33,6 +39,12 @@ router.get(
 );
 
 
+router.get(
+  "/:documentId/download",
+  download
+);
+
+
 router.post(
   "/",
   authorizeRoles(
@@ -41,7 +53,25 @@ router.post(
     "DIRECTOR_AREA",
     "FUNCIONARIO_OPERATIVO"
   ),
-  create
+
+  uploadSiaDocument.single(
+    "archivo"
+  ),
+
+  upload
+);
+
+
+router.delete(
+  "/:documentId",
+
+  authorizeRoles(
+    "ADMINISTRADOR_MUNICIPAL",
+    "ENLACE_MUNICIPAL",
+    "DIRECTOR_AREA"
+  ),
+
+  remove
 );
 
 
