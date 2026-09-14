@@ -207,10 +207,9 @@
   display: grid;
 
   grid-template-columns:
-    repeat(
-      2,
-      minmax(0, 1fr)
-    );
+  minmax(0, 2fr)
+  minmax(0, 1fr)
+  auto;
 
   gap: 18px;
 
@@ -600,4 +599,40 @@
     width: 100%;
   }
 
+}
+
+.transparency-file-actions {
+  display: flex;
+  align-items: flex-end;
+  justify-content: flex-end;
+}
+
+
+.transparency-download-button {
+  padding: 8px 12px;
+
+  background: #ffffff;
+
+  border: 1px solid #2563eb;
+  border-radius: 7px;
+
+  color: #1d4ed8;
+
+  cursor: pointer;
+
+  font: inherit;
+  font-size: 0.78rem;
+  font-weight: 600;
+}
+
+
+.transparency-download-button:hover {
+  background: #eff6ff;
+}
+
+
+.transparency-download-button:disabled {
+  opacity: 0.6;
+
+  cursor: not-allowed;
 }

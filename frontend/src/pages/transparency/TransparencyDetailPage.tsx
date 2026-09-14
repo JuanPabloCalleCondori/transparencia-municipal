@@ -10,6 +10,7 @@ import {
 } from "react-router-dom";
 
 import {
+  downloadTransparencyFile,
   getTransparencyLoad,
   publishTransparencyLoad,
   uploadTransparencyFile,
@@ -192,6 +193,11 @@ export default function TransparencyDetailPage() {
     publishing,
     setPublishing,
   ] = useState(false);
+
+  const [
+  downloading,
+  setDownloading,
+] = useState(false);
 
 
   const loadDetail =
@@ -389,6 +395,36 @@ export default function TransparencyDetailPage() {
     }
   }
 
+  async function handleDownload() {
+  if (
+    !load ||
+    !load.nombre_archivo
+  ) {
+    return;
+  }
+
+  setActionMessage("");
+  setActionError("");
+
+  try {
+    setDownloading(true);
+
+    await downloadTransparencyFile(
+      load.id_carga,
+      load.nombre_archivo
+    );
+
+  } catch (error) {
+    setActionError(
+      error instanceof Error
+        ? error.message
+        : "No fue posible descargar el archivo."
+    );
+  } finally {
+    setDownloading(false);
+  }
+}
+
 
   if (loading) {
     return (
@@ -426,8 +462,6 @@ export default function TransparencyDetailPage() {
       </div>
     );
   }
-
-
   return (
     <div className="transparency-detail-page">
 
@@ -599,35 +633,55 @@ export default function TransparencyDetailPage() {
 
         </div>
 
-
         {load.nombre_archivo ? (
-          <div className="transparency-file-current">
+  <div className="transparency-file-current">
 
-            <div>
-              <span>
-                Archivo actual
-              </span>
+    <div>
+      <span>
+        Archivo actual
+      </span>
 
-              <strong>
-                {load.nombre_archivo}
-              </strong>
-            </div>
+      <strong>
+        {load.nombre_archivo}
+      </strong>
+    </div>
 
 
-            <div>
-              <span>
-                Fecha de carga
-              </span>
+    <div>
+      <span>
+        Fecha de carga
+      </span>
 
-              <strong>
-                {formatDateTime(
-                  load.fecha_carga
-                )}
-              </strong>
-            </div>
+      <strong>
+        {formatDateTime(
+          load.fecha_carga
+        )}
+      </strong>
+    </div>
 
-          </div>
-        ) : (
+
+    <div className="transparency-file-actions">
+
+      <button
+        type="button"
+        className="transparency-download-button"
+        onClick={
+          handleDownload
+        }
+        disabled={
+          downloading
+        }
+      >
+        {downloading
+          ? "Descargando..."
+          : "Descargar archivo"}
+      </button>
+
+    </div>
+
+  </div>
+) : (
+        
           <div className="transparency-detail-empty">
             Todavía no existe un archivo
             asociado.

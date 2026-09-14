@@ -149,3 +149,94 @@ export function getTransparencyAssignmentOptions() {
     "/transparency/assignment-options"
   );
 }
+
+export async function downloadTransparencyFile(
+  idCarga: number,
+  fileName: string
+) {
+  const token =
+    localStorage.getItem(
+      "token"
+    );
+
+  if (!token) {
+    throw new Error(
+      "No existe una sesión activa."
+    );
+  }
+
+
+  const API_URL =
+    import.meta.env
+      .VITE_API_URL;
+
+
+  const response =
+    await fetch(
+      `${API_URL}/transparency/loads/${idCarga}/file`,
+      {
+        method: "GET",
+
+        headers: {
+          Authorization:
+            `Bearer ${token}`,
+        },
+      }
+    );
+
+
+  if (!response.ok) {
+    let message =
+      "No fue posible descargar el archivo.";
+
+    try {
+      const data =
+        await response.json();
+
+      if (data.message) {
+        message =
+          data.message;
+      }
+    } catch {
+      // La respuesta puede no ser JSON.
+    }
+
+    throw new Error(
+      message
+    );
+  }
+
+
+  const blob =
+    await response.blob();
+
+
+  const url =
+    window.URL.createObjectURL(
+      blob
+    );
+
+
+  const anchor =
+    document.createElement(
+      "a"
+    );
+
+  anchor.href =
+    url;
+
+  anchor.download =
+    fileName;
+
+  document.body.appendChild(
+    anchor
+  );
+
+  anchor.click();
+
+  anchor.remove();
+
+  window.URL.revokeObjectURL(
+    url
+  );
+}

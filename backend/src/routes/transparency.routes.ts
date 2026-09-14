@@ -10,6 +10,7 @@ import {
   listLoads,
   getLoad,
   uploadLoadFile,
+  downloadLoadFile,
   validateLoad,
   publishLoad,
   assignmentOptions,
@@ -115,6 +116,22 @@ router.get(
 router.get(
   "/loads/:id",
   getLoad
+);
+
+/*
+ * Descargar archivo asociado.
+ */
+router.get(
+  "/loads/:id/file",
+
+  authorizeRoles(
+    "ADMINISTRADOR_MUNICIPAL",
+    "ENLACE_MUNICIPAL",
+    "DIRECTOR_AREA",
+    "FUNCIONARIO_OPERATIVO"
+  ),
+
+  downloadLoadFile
 );
 
 

@@ -4,6 +4,7 @@ import type {
 } from "express";
 
 import fs from "fs/promises";
+import path from "path";
 
 import {
   createTransparencyItem,
@@ -29,6 +30,7 @@ import {
   getAssignmentDepartments,
   getAssignmentUsers,
 } from "../services/user.service.js";
+
 
 
 /* =========================================================
@@ -866,5 +868,145 @@ export async function publishLoad(
       error,
       res
     );
+  }
+}
+
+export async function downloadLoadFile(
+  req: Request,
+  res: Response
+) {
+  try {
+    const idCarga =
+      Number(req.params.id);
+
+    if (
+      !Number.isInteger(idCarga) ||
+      idCarga <= 0
+    ) {
+      return res.status(400).json({
+        status: "error",
+        message:
+          "ID de carga inválido.",
+      });
+    }
+
+
+    const carga =
+      await getTransparencyLoadById(
+        idCarga
+      );
+
+
+    if (
+      !carga.nombre_archivo ||
+      !carga.ruta_archivo
+    ) {
+      return res.status(404).json({
+        status: "error",
+        message:
+          "La carga no tiene un archivo asociado.",
+      });
+    }
+
+
+    const uploadDirectory =
+      path.resolve(
+        process.cwd(),
+        "uploads",
+        "transparencia"
+      );
+
+
+    const filePath =
+      path.resolve(
+        carga.ruta_archivo
+      );
+
+
+    /*
+     * Seguridad:
+     *
+     * Impide descargar archivos
+     * ubicados fuera del directorio
+     * de Transparencia Activa.
+     */
+    if (
+      filePath !==
+        uploadDirectory &&
+      !filePath.startsWith(
+        `${uploadDirectory}${path.sep}`
+      )
+    ) {
+      return res.status(403).json({
+        status: "error",
+        message:
+          "Ruta de archivo no autorizada.",
+      });
+    }
+
+
+    try {
+  await fs.access(filePath);
+} catch {
+  return res.status(404).json({
+    status: "error",
+    message:
+      "El archivo ya no se encuentra disponible en el servidor.",
+  });
+}
+
+
+    return res.download(
+      filePath,
+      carga.nombre_archivo,
+      (error) => {
+        if (error) {
+          console.error(
+            "Error descargando archivo de Transparencia Activa:",
+            error
+          );
+
+          if (
+            !res.headersSent
+          ) {
+            res.status(500).json({
+              status: "error",
+              message:
+                "No fue posible descargar el archivo.",
+            });
+          }
+        }
+      }
+    );
+
+  } catch (error) {
+    console.error(
+      "Error obteniendo archivo de Transparencia Activa:",
+      error
+    );
+
+    const message =
+      error instanceof Error
+        ? error.message
+        : "";
+
+
+    if (
+      message ===
+      "CARGA_NO_ENCONTRADA"
+    ) {
+      return res.status(404).json({
+        status: "error",
+        message:
+          "Carga de Transparencia Activa no encontrada.",
+      });
+    }
+
+
+    return res.status(500).json({
+      status: "error",
+      message:
+        "Error interno del servidor.",
+    });
   }
 }
