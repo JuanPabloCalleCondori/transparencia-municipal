@@ -33,3 +33,15 @@ export interface SiaListResponse {
   total: number;
   solicitudes: SiaRequest[];
 }
+
+export interface CreateSiaRequest {
+  nombre_solicitante: string;
+  email_solicitante: string;
+  descripcion: string;
+}
+
+export interface CreateSiaRequest {
+  nombreSolicitante: string;
+  emailSolicitante?: string;
+  descripcion: string;
+}

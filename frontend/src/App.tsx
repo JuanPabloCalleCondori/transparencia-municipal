@@ -12,6 +12,8 @@ import DashboardPage from "./pages/DashboardPage";
 
 import SiaListPage from "./pages/sia/SiaListPage";
 
+import SiaCreatePage from "./pages/sia/SiaCreatePage";
+
 
 function TemporaryPage({
   title,
@@ -64,6 +66,11 @@ export default function App() {
           <Route
             path="/sia"
             element={<SiaListPage />}
+          />
+          
+          <Route
+            path="/sia/new"
+            element={<SiaCreatePage />}
           />
 
           <Route

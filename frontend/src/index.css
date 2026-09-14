@@ -1387,3 +1387,244 @@ button {
     flex-direction: column;
   }
 }
+
+/* ================================
+   NUEVA SOLICITUD SIA
+   ================================ */
+
+.sia-create-layout {
+  display: grid;
+  grid-template-columns:
+    minmax(0, 1fr) 260px;
+
+  gap: 20px;
+
+  align-items: start;
+}
+
+.form-section-heading {
+  margin-bottom: 22px;
+}
+
+.form-section-heading h2 {
+  margin: 0;
+
+  color: #0f172a;
+
+  font-size: 17px;
+}
+
+.form-section-heading p {
+  margin: 5px 0 0;
+
+  color: #64748b;
+
+  font-size: 12px;
+}
+
+.sia-form {
+  display: flex;
+  flex-direction: column;
+
+  gap: 20px;
+}
+
+.form-row {
+  display: grid;
+  grid-template-columns:
+    repeat(2, minmax(0, 1fr));
+
+  gap: 16px;
+}
+
+.form-field {
+  display: flex;
+  flex-direction: column;
+
+  gap: 7px;
+}
+
+.form-field label {
+  color: #334155;
+
+  font-size: 12px;
+  font-weight: 700;
+}
+
+.form-field label span {
+  margin-left: 3px;
+
+  color: #dc2626;
+}
+
+.form-field input,
+.form-field textarea {
+  width: 100%;
+
+  box-sizing: border-box;
+
+  padding: 10px 12px;
+
+  border: 1px solid #cbd5e1;
+  border-radius: 7px;
+
+  background: white;
+  color: #1e293b;
+
+  font-family: inherit;
+  font-size: 13px;
+
+  outline: none;
+}
+
+.form-field textarea {
+  min-height: 160px;
+
+  line-height: 1.5;
+
+  resize: vertical;
+}
+
+.form-field input:focus,
+.form-field textarea:focus {
+  border-color: #0e7490;
+
+  box-shadow:
+    0 0 0 3px
+    rgba(14, 116, 144, 0.1);
+}
+
+.form-field input:disabled,
+.form-field textarea:disabled {
+  background: #f8fafc;
+
+  cursor: not-allowed;
+}
+
+.form-field-footer {
+  display: flex;
+  justify-content: space-between;
+
+  color: #94a3b8;
+
+  font-size: 10px;
+}
+
+.form-actions {
+  display: flex;
+  justify-content: flex-end;
+
+  gap: 10px;
+
+  padding-top: 18px;
+
+  border-top: 1px solid #e2e8f0;
+}
+
+.form-alert {
+  margin-bottom: 18px;
+
+  padding: 11px 13px;
+
+  border-radius: 7px;
+
+  font-size: 12px;
+  font-weight: 600;
+}
+
+.form-alert-error {
+  border: 1px solid #fecaca;
+
+  background: #fef2f2;
+  color: #b91c1c;
+}
+
+.form-alert-success {
+  border: 1px solid #bbf7d0;
+
+  background: #f0fdf4;
+  color: #15803d;
+}
+
+
+/* ================================
+   INFORMACIÓN LATERAL
+   ================================ */
+
+.sia-info-card {
+  padding: 18px;
+
+  border: 1px solid #e2e8f0;
+  border-radius: 9px;
+
+  background: white;
+}
+
+.sia-info-card h3 {
+  margin: 0;
+
+  color: #0f172a;
+
+  font-size: 14px;
+}
+
+.sia-info-card > p {
+  margin: 7px 0 18px;
+
+  color: #64748b;
+
+  font-size: 11px;
+  line-height: 1.5;
+}
+
+.sia-info-item {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+
+  gap: 10px;
+
+  padding: 11px 0;
+
+  border-top: 1px solid #f1f5f9;
+}
+
+.sia-info-item span {
+  color: #64748b;
+
+  font-size: 11px;
+}
+
+.sia-info-item strong {
+  color: #155e75;
+
+  font-size: 11px;
+
+  text-align: right;
+}
+
+
+@media (max-width: 900px) {
+  .sia-create-layout {
+    grid-template-columns: 1fr;
+  }
+
+  .sia-info-card {
+    order: -1;
+  }
+}
+
+
+@media (max-width: 600px) {
+  .form-row {
+    grid-template-columns: 1fr;
+  }
+
+  .form-actions {
+    flex-direction: column-reverse;
+  }
+
+  .form-actions button {
+    width: 100%;
+  }
+}
