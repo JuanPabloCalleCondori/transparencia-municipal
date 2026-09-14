@@ -4,6 +4,7 @@ import {
   list,
   update,
   deactivate,
+  options,
 } from "../controllers/user.controller.js";
 
 import { authenticateToken } from "../middlewares/auth.middleware.js";
@@ -14,6 +15,7 @@ const router = Router();
 router.use(authenticateToken);
 router.use(authorizeRoles("ADMINISTRADOR_MUNICIPAL"));
 
+router.get("/options", options);
 router.get("/", list);
 router.post("/", create);
 router.patch("/:id", update);

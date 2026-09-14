@@ -22,6 +22,9 @@ import TransparencyPage
 import TransparencyDetailPage
   from "./pages/transparency/TransparencyDetailPage";
 
+import UsersPage
+  from "./pages/users/UsersPage";
+
 
 function TemporaryPage({
   title,
@@ -103,9 +106,7 @@ export default function App() {
           <Route
             path="/users"
             element={
-              <TemporaryPage
-                title="Gestión de Usuarios"
-              />
+              <UsersPage />
             }
           />
 

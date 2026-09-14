@@ -4,6 +4,7 @@ import {
   getUsers,
   updateUser,
   deactivateUser,
+  getUserFormOptions,
 } from "../services/user.service.js";
 
 export async function create(req: Request, res: Response) {
@@ -302,6 +303,32 @@ export async function deactivate(req: Request, res: Response) {
     return res.status(500).json({
       status: "error",
       message: "Error interno del servidor",
+    });
+  }
+}
+
+export async function options(
+  _req: Request,
+  res: Response
+) {
+  try {
+    const data =
+      await getUserFormOptions();
+
+    return res.status(200).json({
+      status: "ok",
+      ...data,
+    });
+  } catch (error) {
+    console.error(
+      "Error obteniendo opciones de usuarios:",
+      error
+    );
+
+    return res.status(500).json({
+      status: "error",
+      message:
+        "Error interno del servidor",
     });
   }
 }

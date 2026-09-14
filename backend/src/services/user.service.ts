@@ -324,3 +324,53 @@ export async function getAssignmentUsers() {
 
   return result.rows;
 }
+
+export interface User {
+  idUsuario: number;
+  email: string;
+  rol: string;
+  nombre?: string;
+  apellido?: string;
+}
+
+export interface LoginResponse {
+  status: string;
+  message?: string;
+  token: string;
+  usuario?: User;
+}
+
+export async function getUserFormOptions() {
+  const [
+    rolesResult,
+    departmentsResult,
+  ] = await Promise.all([
+    pool.query(
+      `
+      SELECT
+        id_rol,
+        nombre
+      FROM roles
+      WHERE activo = TRUE
+      ORDER BY nombre
+      `
+    ),
+
+    pool.query(
+      `
+      SELECT
+        id_departamento,
+        nombre
+      FROM departamentos
+      WHERE activo = TRUE
+      ORDER BY nombre
+      `
+    ),
+  ]);
+
+  return {
+    roles: rolesResult.rows,
+    departamentos:
+      departmentsResult.rows,
+  };
+}
