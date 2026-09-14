@@ -101,3 +101,32 @@ export interface ChangeSiaStatusResponse {
   message: string;
   solicitud: SiaRequest;
 }
+
+export interface CreateSiaExtensionRequest {
+  motivo: string;
+}
+
+export interface SiaExtension {
+  id_prorroga: number;
+  id_solicitud: number;
+  id_usuario: number;
+  motivo: string;
+  dias_prorroga: number;
+  aprobada: boolean;
+  fecha_resolucion: string | null;
+  numero_resolucion: string | null;
+}
+
+export interface CreateSiaExtensionResponse {
+  status: string;
+  message: string;
+  solicitud: SiaRequest;
+  prorroga: SiaExtension;
+  plazo: {
+    fechaIngreso: string;
+    fechaVencimiento: string;
+    diasHabilesRestantes: number;
+    vencida: boolean;
+    semaforo: string;
+  };
+}

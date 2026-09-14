@@ -11,6 +11,7 @@ import {
 import {
   assignSiaRequest,
   changeSiaStatus,
+  createSiaExtension,
   getAssignmentOptions,
   getSiaRequestById,
 } from "../../api/sia.api";
@@ -141,6 +142,38 @@ export default function SiaDetailPage() {
     statusError,
     setStatusError,
   ] = useState("");
+
+
+  /*
+   * Estado del proceso
+   * de prórroga.
+   */
+  const [
+    extensionReason,
+    setExtensionReason,
+  ] = useState("");
+
+  const [
+    applyingExtension,
+    setApplyingExtension,
+  ] = useState(false);
+
+  const [
+    extensionMessage,
+    setExtensionMessage,
+  ] = useState("");
+
+  const [
+    extensionError,
+    setExtensionError,
+  ] = useState("");
+
+  const [
+    extensionResolution,
+    setExtensionResolution,
+  ] = useState<string | null>(
+    null
+  );
 
 
   /*
@@ -305,9 +338,6 @@ export default function SiaDetailPage() {
       setAssigning(true);
 
 
-      /*
-       * Ejecutamos la asignación.
-       */
       const assignmentResponse =
         await assignSiaRequest(
           request.id_solicitud,
@@ -319,8 +349,8 @@ export default function SiaDetailPage() {
 
 
       /*
-       * Consultamos nuevamente
-       * el detalle completo.
+       * Volvemos a consultar el
+       * detalle completo.
        */
       const detailResponse =
         await getSiaRequestById(
@@ -413,9 +443,6 @@ export default function SiaDetailPage() {
       setChangingStatus(true);
 
 
-      /*
-       * Ejecutamos cambio de estado.
-       */
       const statusResponse =
         await changeSiaStatus(
           request.id_solicitud,
@@ -426,8 +453,8 @@ export default function SiaDetailPage() {
 
 
       /*
-       * Volvemos a consultar el
-       * detalle completo.
+       * Volvemos a consultar
+       * el detalle completo.
        */
       const detailResponse =
         await getSiaRequestById(
@@ -454,6 +481,103 @@ export default function SiaDetailPage() {
       );
     } finally {
       setChangingStatus(false);
+    }
+  }
+
+
+  /*
+   * Aplicar prórroga.
+   */
+  async function handleCreateExtension() {
+    try {
+      setExtensionError("");
+      setExtensionMessage("");
+      setExtensionResolution(null);
+
+      if (!request) {
+        return;
+      }
+
+
+      const motivo =
+        extensionReason.trim();
+
+
+      if (!motivo) {
+        setExtensionError(
+          "Debes ingresar el motivo de la prórroga."
+        );
+
+        return;
+      }
+
+
+      if (motivo.length < 10) {
+        setExtensionError(
+          "El motivo debe contener al menos 10 caracteres."
+        );
+
+        return;
+      }
+
+
+      if (request.tiene_prorroga) {
+        setExtensionError(
+          "La solicitud ya tiene una prórroga aplicada."
+        );
+
+        return;
+      }
+
+
+      setApplyingExtension(true);
+
+
+      const extensionResponse =
+        await createSiaExtension(
+          request.id_solicitud,
+          {
+            motivo,
+          }
+        );
+
+
+      /*
+       * Consultamos nuevamente
+       * el detalle completo.
+       */
+      const detailResponse =
+        await getSiaRequestById(
+          request.id_solicitud
+        );
+
+      setRequest(
+        detailResponse.solicitud
+      );
+
+      setExtensionReason("");
+
+
+      setExtensionResolution(
+        extensionResponse.prorroga
+          ?.numero_resolucion ??
+          null
+      );
+
+
+      setExtensionMessage(
+        extensionResponse.message ||
+          "Prórroga aplicada correctamente."
+      );
+
+    } catch (error) {
+      setExtensionError(
+        error instanceof Error
+          ? error.message
+          : "No fue posible aplicar la prórroga."
+      );
+    } finally {
+      setApplyingExtension(false);
     }
   }
 
@@ -541,10 +665,6 @@ export default function SiaDetailPage() {
 
   /*
    * Responsable.
-   *
-   * El listado SIA y el detalle
-   * actualmente utilizan estructuras
-   * ligeramente diferentes.
    */
   const responsible =
     request.responsable_nombre?.trim()
@@ -578,10 +698,6 @@ export default function SiaDetailPage() {
 
   /*
    * Transiciones disponibles.
-   *
-   * El backend continúa siendo
-   * la fuente definitiva para
-   * validar las transiciones.
    */
   const statusTransitions: Record<
     string,
@@ -840,7 +956,6 @@ export default function SiaDetailPage() {
 
                 <div className="assignment-grid">
 
-                  {/* DEPARTAMENTO */}
                   <div className="form-group">
                     <label
                       htmlFor="sia-department"
@@ -899,7 +1014,6 @@ export default function SiaDetailPage() {
                   </div>
 
 
-                  {/* RESPONSABLE */}
                   <div className="form-group">
                     <label
                       htmlFor="sia-responsible"
@@ -1103,6 +1217,165 @@ export default function SiaDetailPage() {
 
                 </div>
               )}
+
+
+            {/* =========================
+                PRÓRROGA
+                ========================= */}
+            {!closed && (
+              <div className="extension-section">
+
+                <div className="detail-section-title">
+                  <h3>
+                    Prórroga de solicitud
+                  </h3>
+                </div>
+
+
+                {request.tiene_prorroga ? (
+                  <div className="extension-applied">
+
+                    <div className="extension-applied-header">
+                      <span className="extension-check">
+                        ✓
+                      </span>
+
+                      <div>
+                        <strong>
+                          Prórroga aplicada
+                        </strong>
+
+                        <p>
+                          La solicitud dispone de
+                          10 días hábiles adicionales.
+                        </p>
+                      </div>
+                    </div>
+
+
+                    <div className="extension-info-grid">
+
+                      <div className="detail-field">
+                        <span>
+                          Nuevo vencimiento
+                        </span>
+
+                        <strong>
+                          {formatDate(
+                            request.fecha_vencimiento
+                          )}
+                        </strong>
+                      </div>
+
+
+                      {extensionResolution && (
+                        <div className="detail-field">
+                          <span>
+                            Resolución
+                          </span>
+
+                          <strong>
+                            {extensionResolution}
+                          </strong>
+                        </div>
+                      )}
+
+                    </div>
+
+
+                    {extensionMessage && (
+                      <div className="form-success">
+                        {extensionMessage}
+                      </div>
+                    )}
+
+                  </div>
+                ) : (
+                  <>
+                    <p className="extension-description">
+                      La prórroga permite extender
+                      el plazo de respuesta de esta
+                      solicitud en 10 días hábiles.
+                      Debe existir una justificación
+                      antes de aplicarla.
+                    </p>
+
+
+                    <div className="form-group">
+                      <label
+                        htmlFor="extension-reason"
+                      >
+                        Motivo de la prórroga
+                      </label>
+
+                      <textarea
+                        id="extension-reason"
+                        rows={4}
+                        value={
+                          extensionReason
+                        }
+                        placeholder="Ej: Se requiere tiempo adicional para recopilar y validar antecedentes provenientes de las unidades municipales involucradas."
+                        onChange={(event) => {
+                          setExtensionReason(
+                            event.target.value
+                          );
+
+                          setExtensionError(
+                            ""
+                          );
+
+                          setExtensionMessage(
+                            ""
+                          );
+                        }}
+                        disabled={
+                          applyingExtension
+                        }
+                      />
+
+                      <span className="form-help">
+                        La extensión será de
+                        10 días hábiles.
+                      </span>
+                    </div>
+
+
+                    {extensionError && (
+                      <div className="form-error">
+                        {extensionError}
+                      </div>
+                    )}
+
+
+                    {extensionMessage && (
+                      <div className="form-success">
+                        {extensionMessage}
+                      </div>
+                    )}
+
+
+                    <div className="extension-actions">
+                      <button
+                        type="button"
+                        className="primary-button"
+                        onClick={
+                          handleCreateExtension
+                        }
+                        disabled={
+                          applyingExtension ||
+                          !extensionReason.trim()
+                        }
+                      >
+                        {applyingExtension
+                          ? "Aplicando..."
+                          : "Aplicar prórroga"}
+                      </button>
+                    </div>
+                  </>
+                )}
+
+              </div>
+            )}
 
           </div>
         </div>

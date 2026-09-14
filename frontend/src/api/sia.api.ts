@@ -13,6 +13,8 @@ import type {
   SiaDetailResponse,
   SiaListResponse,
   SiaRequest,
+  CreateSiaExtensionRequest,
+  CreateSiaExtensionResponse,
 } from "../types/sia";
 
 
@@ -83,6 +85,19 @@ export async function changeSiaStatus(
     `/sia/${idSolicitud}/status`,
     {
       method: "PATCH",
+      body: JSON.stringify(data),
+    }
+  );
+}
+
+export async function createSiaExtension(
+  idSolicitud: number,
+  data: CreateSiaExtensionRequest
+): Promise<CreateSiaExtensionResponse> {
+  return apiRequest<CreateSiaExtensionResponse>(
+    `/sia/${idSolicitud}/extensions`,
+    {
+      method: "POST",
       body: JSON.stringify(data),
     }
   );

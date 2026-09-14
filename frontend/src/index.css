@@ -2123,3 +2123,138 @@ button {
     flex-direction: column;
   }
 }
+
+/* ================================
+   PRÓRROGA SIA
+   ================================ */
+
+.extension-section {
+  margin-top: 24px;
+  padding-top: 22px;
+  border-top: 1px solid #e2e8f0;
+}
+
+.extension-section .detail-section-title {
+  margin-bottom: 16px;
+}
+
+.extension-section h3 {
+  margin: 0;
+  color: #0f172a;
+  font-size: 13px;
+}
+
+.extension-description {
+  margin: 0 0 18px;
+  max-width: 720px;
+
+  color: #64748b;
+  font-size: 14px;
+  line-height: 1.6;
+}
+
+.extension-section textarea {
+  width: 100%;
+  min-height: 110px;
+  padding: 12px 14px;
+
+  border: 1px solid #cbd5e1;
+  border-radius: 8px;
+
+  font: inherit;
+  resize: vertical;
+
+  box-sizing: border-box;
+}
+
+.extension-section textarea:focus {
+  outline: none;
+  border-color: #94a3b8;
+}
+
+.form-help {
+  display: block;
+  margin-top: 7px;
+
+  color: #64748b;
+  font-size: 12px;
+}
+
+.extension-actions {
+  display: flex;
+  justify-content: flex-end;
+
+  margin-top: 16px;
+}
+
+.extension-applied {
+  display: flex;
+  flex-direction: column;
+  gap: 18px;
+}
+
+.extension-applied-header {
+  display: flex;
+  align-items: flex-start;
+  gap: 12px;
+
+  padding: 14px;
+
+  border: 1px solid #bbf7d0;
+  border-radius: 8px;
+
+  background: #f0fdf4;
+}
+
+.extension-check {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+
+  width: 28px;
+  height: 28px;
+
+  flex-shrink: 0;
+
+  border-radius: 50%;
+
+  background: #dcfce7;
+  color: #166534;
+
+  font-weight: 700;
+}
+
+.extension-applied-header strong {
+  color: #166534;
+}
+
+.extension-applied-header p {
+  margin: 4px 0 0;
+
+  color: #15803d;
+  font-size: 13px;
+}
+
+.extension-info-grid {
+  display: grid;
+  grid-template-columns:
+    repeat(2, minmax(0, 1fr));
+
+  gap: 16px;
+}
+
+
+@media (max-width: 600px) {
+  .extension-info-grid {
+    grid-template-columns: 1fr;
+  }
+
+  .extension-actions {
+    justify-content: stretch;
+  }
+
+  .extension-actions
+  .primary-button {
+    width: 100%;
+  }
+}
