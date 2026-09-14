@@ -36,6 +36,8 @@ import SiaCommentsSection
 import SiaDocumentsSection
   from "../../components/sia/SiaDocumentsSection";
 
+import SiaAuditSection
+  from "../../components/sia/SiaAuditSection";
 
 function formatState(
   state?: string | null
@@ -1407,6 +1409,11 @@ export default function SiaDetailPage() {
                 request.id_solicitud
         }
               closed={closed}
+        />
+        <SiaAuditSection
+              idSolicitud={
+                 request.id_solicitud
+        }
         />
 
         </div>

@@ -1,0 +1,393 @@
+.sia-audit-section {
+  margin-top: 24px;
+
+  background: #ffffff;
+
+  border: 1px solid #e2e8f0;
+  border-radius: 12px;
+
+  overflow: hidden;
+}
+
+
+.sia-audit-header {
+  display: flex;
+  align-items: flex-start;
+  justify-content: space-between;
+
+  gap: 20px;
+
+  padding: 20px 22px;
+
+  border-bottom: 1px solid #e2e8f0;
+}
+
+
+.sia-audit-header h3 {
+  margin: 0 0 5px;
+
+  color: #0f172a;
+
+  font-size: 1.05rem;
+}
+
+
+.sia-audit-header p {
+  margin: 0;
+
+  color: #64748b;
+
+  font-size: 0.9rem;
+}
+
+
+.sia-audit-count {
+  display: flex;
+  align-items: center;
+
+  gap: 6px;
+
+  padding: 6px 10px;
+
+  background: #f1f5f9;
+
+  border-radius: 999px;
+
+  color: #475569;
+
+  font-size: 0.8rem;
+}
+
+
+.sia-audit-count strong {
+  color: #0f172a;
+}
+
+
+.sia-audit-message,
+.sia-audit-empty {
+  padding: 32px 22px;
+
+  text-align: center;
+
+  color: #64748b;
+}
+
+
+.sia-audit-empty {
+  display: flex;
+  flex-direction: column;
+
+  gap: 6px;
+}
+
+
+.sia-audit-empty strong {
+  color: #334155;
+}
+
+
+.sia-audit-empty span {
+  font-size: 0.9rem;
+}
+
+
+.sia-audit-error {
+  margin: 16px 22px 0;
+
+  padding: 10px 12px;
+
+  background: #fef2f2;
+
+  border: 1px solid #fecaca;
+  border-radius: 8px;
+
+  color: #991b1b;
+
+  font-size: 0.85rem;
+}
+
+
+.sia-audit-timeline {
+  padding: 22px;
+}
+
+
+.sia-audit-entry {
+  display: grid;
+
+  grid-template-columns:
+    42px
+    minmax(0, 1fr);
+
+  gap: 12px;
+}
+
+
+.sia-audit-line-column {
+  position: relative;
+
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+}
+
+
+.sia-audit-avatar {
+  position: relative;
+
+  z-index: 2;
+
+  width: 34px;
+  height: 34px;
+
+  display: flex;
+  align-items: center;
+  justify-content: center;
+
+  flex-shrink: 0;
+
+  background: #eef2ff;
+
+  border: 1px solid #c7d2fe;
+  border-radius: 50%;
+
+  color: #3730a3;
+
+  font-size: 0.7rem;
+  font-weight: 700;
+}
+
+
+.sia-audit-line {
+  width: 2px;
+
+  flex: 1;
+
+  min-height: 40px;
+
+  background: #e2e8f0;
+}
+
+
+.sia-audit-entry-content {
+  padding: 2px 0 24px;
+}
+
+
+.sia-audit-entry-heading {
+  display: flex;
+  align-items: flex-start;
+  justify-content: space-between;
+
+  gap: 16px;
+}
+
+
+.sia-audit-entry-heading > div {
+  display: flex;
+  flex-direction: column;
+
+  gap: 3px;
+}
+
+
+.sia-audit-action {
+  color: #0f172a;
+
+  font-size: 0.9rem;
+}
+
+
+.sia-audit-date {
+  color: #94a3b8;
+
+  font-size: 0.75rem;
+}
+
+
+.sia-audit-user {
+  color: #475569;
+
+  font-size: 0.8rem;
+  font-weight: 600;
+
+  text-align: right;
+}
+
+
+.sia-audit-description {
+  margin: 9px 0 0;
+
+  color: #475569;
+
+  font-size: 0.87rem;
+  line-height: 1.5;
+}
+
+
+.sia-audit-meta {
+  display: flex;
+  flex-wrap: wrap;
+
+  gap: 10px;
+
+  margin-top: 7px;
+
+  color: #94a3b8;
+
+  font-size: 0.72rem;
+}
+
+
+.sia-audit-details {
+  margin-top: 10px;
+}
+
+
+.sia-audit-details-button {
+  padding: 0;
+
+  background: transparent;
+
+  border: none;
+
+  color: #2563eb;
+
+  cursor: pointer;
+
+  font: inherit;
+  font-size: 0.78rem;
+  font-weight: 600;
+}
+
+
+.sia-audit-details-button:hover {
+  text-decoration: underline;
+}
+
+
+.sia-audit-details-content {
+  display: grid;
+
+  grid-template-columns:
+    repeat(
+      2,
+      minmax(0, 1fr)
+    );
+
+  gap: 12px;
+
+  margin-top: 12px;
+}
+
+
+.sia-audit-data {
+  min-width: 0;
+
+  padding: 12px;
+
+  background: #f8fafc;
+
+  border: 1px solid #e2e8f0;
+  border-radius: 8px;
+}
+
+
+.sia-audit-data-title {
+  display: block;
+
+  margin-bottom: 9px;
+
+  color: #334155;
+
+  font-size: 0.76rem;
+}
+
+
+.sia-audit-data-grid {
+  display: flex;
+  flex-direction: column;
+
+  gap: 7px;
+}
+
+
+.sia-audit-data-row {
+  min-width: 0;
+}
+
+
+.sia-audit-data-row > span {
+  display: block;
+
+  margin-bottom: 2px;
+
+  color: #64748b;
+
+  font-size: 0.68rem;
+}
+
+
+.sia-audit-data-row code {
+  display: block;
+
+  max-height: 180px;
+
+  padding: 5px 7px;
+
+  overflow: auto;
+
+  background: #ffffff;
+
+  border: 1px solid #e2e8f0;
+  border-radius: 5px;
+
+  color: #334155;
+
+  font-family:
+    Consolas,
+    "Courier New",
+    monospace;
+
+  font-size: 0.68rem;
+
+  white-space: pre-wrap;
+  overflow-wrap: anywhere;
+}
+
+
+@media (max-width: 800px) {
+
+  .sia-audit-details-content {
+    grid-template-columns: 1fr;
+  }
+
+}
+
+
+@media (max-width: 600px) {
+
+  .sia-audit-header {
+    flex-direction: column;
+  }
+
+
+  .sia-audit-entry-heading {
+    flex-direction: column;
+
+    gap: 5px;
+  }
+
+
+  .sia-audit-user {
+    text-align: left;
+  }
+
+
+  .sia-audit-timeline {
+    padding:
+      20px 14px;
+  }
+
+}
