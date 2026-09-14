@@ -15,6 +15,8 @@ import transparencyRoutes from "./routes/transparency.routes.js";
 
 import notificationRoutes from "./routes/notification.routes.js";
 
+import dashboardRoutes from "./routes/dashboard.routes.js";
+
 const app = express();
 
 app.use(cors());
@@ -35,5 +37,7 @@ app.use("/api/sia/:id/documents", documentRoutes);
 app.use("/api/transparency", transparencyRoutes);
 
 app.use("/api/notifications", notificationRoutes);
+
+app.use("/api/dashboard", dashboardRoutes);
 
 export default app;

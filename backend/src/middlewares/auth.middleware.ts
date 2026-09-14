@@ -1,62 +1,146 @@
-import type { NextFunction, Request, Response } from "express";
+import type {
+  NextFunction,
+  Request,
+  Response,
+} from "express";
+
 import jwt from "jsonwebtoken";
+
+
+interface AuthTokenPayload
+  extends jwt.JwtPayload {
+  idUsuario: number;
+  email: string;
+  rol: string;
+}
+
 
 export function authenticateToken(
   req: Request,
   res: Response,
   next: NextFunction
 ) {
-  const authorization = req.headers.authorization;
-
-  if (!authorization) {
-    return res.status(401).json({
-      status: "error",
-      message: "Token de acceso requerido",
-    });
-  }
-
-  const [type, token] = authorization.split(" ");
-
-  if (type !== "Bearer" || !token) {
-    return res.status(401).json({
-      status: "error",
-      message: "Formato de token inválido",
-    });
-  }
-
-  const jwtSecret = process.env.JWT_SECRET;
-
-  if (!jwtSecret) {
-    console.error("JWT_SECRET no está configurado");
-
-    return res.status(500).json({
-      status: "error",
-      message: "Error interno del servidor",
-    });
-  }
-
   try {
-    const decoded = jwt.verify(token, jwtSecret);
+    const authHeader =
+      req.headers.authorization;
 
     if (
-      typeof decoded === "string" ||
-      typeof decoded.idUsuario !== "number" ||
-      typeof decoded.email !== "string" ||
-      typeof decoded.rol !== "string"
+      !authHeader ||
+      !authHeader.startsWith("Bearer ")
     ) {
       return res.status(401).json({
         status: "error",
-        message: "Token inválido",
+        message:
+          "Token de autenticación requerido",
       });
     }
 
-    req.user = decoded;
+    const token =
+      authHeader.substring(7);
+
+    const secret =
+      process.env.JWT_SECRET;
+
+    if (!secret) {
+      console.error(
+        "JWT_SECRET no está configurado"
+      );
+
+      return res.status(500).json({
+        status: "error",
+        message:
+          "Error de configuración del servidor",
+      });
+    }
+
+    const decoded =
+      jwt.verify(
+        token,
+        secret
+      );
+
+    /*
+     * jwt.verify puede retornar
+     * string o JwtPayload.
+     */
+    if (
+      typeof decoded === "string"
+    ) {
+      return res.status(401).json({
+        status: "error",
+        message:
+          "Token inválido",
+      });
+    }
+
+    /*
+     * Validamos que el payload
+     * contenga los datos que usa
+     * nuestra aplicación.
+     */
+    if (
+      typeof decoded.idUsuario !==
+        "number" ||
+      typeof decoded.email !==
+        "string" ||
+      typeof decoded.rol !==
+        "string"
+    ) {
+      return res.status(401).json({
+        status: "error",
+        message:
+          "Token inválido",
+      });
+    }
+
+    const userPayload:
+      AuthTokenPayload = {
+        ...decoded,
+
+        idUsuario:
+          decoded.idUsuario,
+
+        email:
+          decoded.email,
+
+        rol:
+          decoded.rol,
+      };
+
+    req.user =
+      userPayload;
 
     next();
-  } catch {
-    return res.status(401).json({
+  } catch (error) {
+    if (
+      error instanceof jwt.TokenExpiredError
+    ) {
+      return res.status(401).json({
+        status: "error",
+        message:
+          "Token expirado",
+      });
+    }
+
+    if (
+      error instanceof jwt.JsonWebTokenError
+    ) {
+      return res.status(401).json({
+        status: "error",
+        message:
+          "Token inválido",
+      });
+    }
+
+    console.error(
+      "Error validando token:",
+      error
+    );
+
+    return res.status(500).json({
       status: "error",
-      message: "Token inválido o expirado",
+      message:
+        "Error interno del servidor",
     });
   }
 }
