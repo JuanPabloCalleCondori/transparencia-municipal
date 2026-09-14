@@ -21,6 +21,10 @@ import {
   registerAudit,
 } from "../services/audit.service.js";
 
+import {
+  createNotification,
+} from "../services/notification.service.js";
+
 
 /* =========================================================
    MANEJO GENERAL DE ERRORES
@@ -107,6 +111,13 @@ function handleTransparencyError(
           status: "error",
           message:
             "Tipo de archivo no permitido",
+        });
+
+      case "USUARIO_NOTIFICACION_INVALIDO":
+        return res.status(400).json({
+          status: "error",
+          message:
+            "No fue posible generar la notificación para el usuario responsable",
         });
     }
   }
@@ -332,14 +343,6 @@ export async function createLoad(
       });
     }
 
-    /*
-     * Como periodo es DATE,
-     * utilizaremos siempre el
-     * primer día del mes.
-     *
-     * Ejemplo:
-     * 2026-09-01
-     */
     if (
       typeof periodo !== "string" ||
       !/^\d{4}-\d{2}-01$/.test(
@@ -564,12 +567,6 @@ export async function uploadLoadFile(
       carga,
     });
   } catch (error) {
-    /*
-     * Si Multer alcanzó a guardar
-     * el archivo pero PostgreSQL
-     * rechazó la operación,
-     * eliminamos el archivo huérfano.
-     */
     if (uploadedFilePath) {
       try {
         await fs.unlink(
@@ -652,6 +649,51 @@ export async function validateLoad(
           : null
       );
 
+    /*
+     * Notificación automática
+     * al dueño de la información.
+     */
+    if (
+      decision === "RECHAZADO"
+    ) {
+      await createNotification({
+        idUsuario:
+          carga.id_usuario_responsable,
+
+        titulo:
+          "Carga de Transparencia rechazada",
+
+        mensaje:
+          `La carga de Transparencia Activa correspondiente al período ${carga.periodo} fue rechazada.${
+            carga.observacion
+              ? ` Observación: ${carga.observacion}`
+              : ""
+          }`,
+
+        tipo:
+          "ADVERTENCIA",
+      });
+    }
+
+
+    if (
+      decision === "APROBADO"
+    ) {
+      await createNotification({
+        idUsuario:
+          carga.id_usuario_responsable,
+
+        titulo:
+          "Carga de Transparencia aprobada",
+
+        mensaje:
+          `La carga de Transparencia Activa correspondiente al período ${carga.periodo} fue aprobada correctamente.`,
+
+        tipo:
+          "INFORMATIVA",
+      });
+    }
+
     await registerAudit({
       idUsuario:
         req.user.idUsuario,
@@ -694,10 +736,12 @@ export async function validateLoad(
 
     return res.status(200).json({
       status: "ok",
+
       message:
         decision === "APROBADO"
           ? "Carga aprobada correctamente"
           : "Carga rechazada correctamente",
+
       carga,
     });
   } catch (error) {

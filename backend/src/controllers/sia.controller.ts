@@ -1,4 +1,7 @@
-import type { Request, Response } from "express";
+import type {
+  Request,
+  Response,
+} from "express";
 
 import {
   createSiaRequest,
@@ -18,6 +21,14 @@ import {
   extendDeadline,
 } from "../services/deadline.service.js";
 
+import {
+  createNotification,
+} from "../services/notification.service.js";
+
+
+/* =========================================================
+   CREAR SOLICITUD
+   ========================================================= */
 
 export async function create(
   req: Request,
@@ -112,6 +123,10 @@ export async function create(
 }
 
 
+/* =========================================================
+   LISTAR SOLICITUDES
+   ========================================================= */
+
 export async function list(
   _req: Request,
   res: Response
@@ -141,6 +156,10 @@ export async function list(
 }
 
 
+/* =========================================================
+   DETALLE DE SOLICITUD
+   ========================================================= */
+
 export async function getById(
   req: Request,
   res: Response
@@ -150,9 +169,7 @@ export async function getById(
       Number(req.params.id);
 
     if (
-      !Number.isInteger(
-        idSolicitud
-      ) ||
+      !Number.isInteger(idSolicitud) ||
       idSolicitud <= 0
     ) {
       return res.status(400).json({
@@ -167,10 +184,6 @@ export async function getById(
         idSolicitud
       );
 
-    /*
-     * Calculamos la información
-     * relacionada con el plazo.
-     */
     const plazo =
       calculateDeadlineInfo(
         new Date(
@@ -213,6 +226,10 @@ export async function getById(
 }
 
 
+/* =========================================================
+   ASIGNAR SOLICITUD
+   ========================================================= */
+
 export async function assign(
   req: Request,
   res: Response
@@ -227,9 +244,7 @@ export async function assign(
     } = req.body;
 
     if (
-      !Number.isInteger(
-        idSolicitud
-      ) ||
+      !Number.isInteger(idSolicitud) ||
       idSolicitud <= 0
     ) {
       return res.status(400).json({
@@ -240,12 +255,8 @@ export async function assign(
     }
 
     if (
-      !Number.isInteger(
-        idDepartamento
-      ) ||
-      !Number.isInteger(
-        idResponsable
-      )
+      !Number.isInteger(idDepartamento) ||
+      !Number.isInteger(idResponsable)
     ) {
       return res.status(400).json({
         status: "error",
@@ -255,14 +266,18 @@ export async function assign(
     }
 
     /*
-     * Guardamos el estado actual
-     * antes de modificar.
+     * Guardamos el estado previo
+     * para auditoría.
      */
     const solicitudAnterior =
       await getSiaRequestById(
         idSolicitud
       );
 
+    /*
+     * Asignamos departamento
+     * y responsable.
+     */
     const solicitud =
       await assignSiaRequest(
         idSolicitud,
@@ -271,7 +286,25 @@ export async function assign(
       );
 
     /*
-     * Registramos la asignación.
+     * Notificación automática
+     * al responsable asignado.
+     */
+    await createNotification({
+      idUsuario:
+        idResponsable,
+
+      titulo:
+        "Nueva solicitud SIA asignada",
+
+      mensaje:
+        `Se te ha asignado la solicitud ${solicitudAnterior.folio} para su gestión.`,
+
+      tipo:
+        "ASIGNACION",
+    });
+
+    /*
+     * Auditoría.
      */
     await registerAudit({
       idUsuario:
@@ -350,6 +383,17 @@ export async function assign(
             "El estado ASIGNADA no está configurado en el sistema",
         });
       }
+
+      if (
+        error.message ===
+        "USUARIO_NOTIFICACION_INVALIDO"
+      ) {
+        return res.status(400).json({
+          status: "error",
+          message:
+            "No fue posible generar la notificación para el responsable",
+        });
+      }
     }
 
     console.error(
@@ -366,6 +410,10 @@ export async function assign(
 }
 
 
+/* =========================================================
+   CAMBIAR ESTADO
+   ========================================================= */
+
 export async function changeStatus(
   req: Request,
   res: Response
@@ -379,9 +427,7 @@ export async function changeStatus(
     } = req.body;
 
     if (
-      !Number.isInteger(
-        idSolicitud
-      ) ||
+      !Number.isInteger(idSolicitud) ||
       idSolicitud <= 0
     ) {
       return res.status(400).json({
@@ -392,9 +438,7 @@ export async function changeStatus(
     }
 
     if (
-      !Number.isInteger(
-        idEstado
-      )
+      !Number.isInteger(idEstado)
     ) {
       return res.status(400).json({
         status: "error",
@@ -403,10 +447,6 @@ export async function changeStatus(
       });
     }
 
-    /*
-     * Guardamos la solicitud
-     * antes del cambio.
-     */
     const solicitudAnterior =
       await getSiaRequestById(
         idSolicitud
@@ -436,12 +476,10 @@ export async function changeStatus(
 
       datosAnteriores: {
         idEstado:
-          solicitudAnterior
-            .id_estado,
+          solicitudAnterior.id_estado,
 
         estado:
-          solicitudAnterior
-            .estado,
+          solicitudAnterior.estado,
       },
 
       datosNuevos: {
@@ -498,6 +536,10 @@ export async function changeStatus(
 }
 
 
+/* =========================================================
+   PRÓRROGA
+   ========================================================= */
+
 export async function createExtension(
   req: Request,
   res: Response
@@ -511,9 +553,7 @@ export async function createExtension(
     } = req.body;
 
     if (
-      !Number.isInteger(
-        idSolicitud
-      ) ||
+      !Number.isInteger(idSolicitud) ||
       idSolicitud <= 0
     ) {
       return res.status(400).json({
@@ -544,19 +584,11 @@ export async function createExtension(
       });
     }
 
-    /*
-     * Guardamos los datos originales
-     * para la auditoría.
-     */
     const solicitudAnterior =
       await getSiaRequestById(
         idSolicitud
       );
 
-    /*
-     * Aplicamos la prórroga
-     * de 10 días hábiles.
-     */
     const resultado =
       await extendDeadline(
         idSolicitud,
@@ -564,10 +596,6 @@ export async function createExtension(
         motivo.trim()
       );
 
-    /*
-     * Obtenemos nuevamente
-     * la solicitud actualizada.
-     */
     const solicitudActualizada =
       await getSiaRequestById(
         idSolicitud
@@ -618,10 +646,6 @@ export async function createExtension(
         req.ip,
     });
 
-    /*
-     * Recalculamos el plazo
-     * después de la prórroga.
-     */
     const plazo =
       calculateDeadlineInfo(
         new Date(
@@ -686,6 +710,10 @@ export async function createExtension(
 }
 
 
+/* =========================================================
+   HISTORIAL
+   ========================================================= */
+
 export async function history(
   req: Request,
   res: Response
@@ -695,9 +723,7 @@ export async function history(
       Number(req.params.id);
 
     if (
-      !Number.isInteger(
-        idSolicitud
-      ) ||
+      !Number.isInteger(idSolicitud) ||
       idSolicitud <= 0
     ) {
       return res.status(400).json({
@@ -707,10 +733,6 @@ export async function history(
       });
     }
 
-    /*
-     * Verificamos que exista
-     * antes de consultar historial.
-     */
     const solicitud =
       await getSiaRequestById(
         idSolicitud

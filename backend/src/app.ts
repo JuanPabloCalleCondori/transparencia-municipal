@@ -13,6 +13,8 @@ import documentRoutes from "./routes/document.routes.js";
 
 import transparencyRoutes from "./routes/transparency.routes.js";
 
+import notificationRoutes from "./routes/notification.routes.js";
+
 const app = express();
 
 app.use(cors());
@@ -31,5 +33,7 @@ app.use("/api/sia/:id/comments", commentRoutes);
 app.use("/api/sia/:id/documents", documentRoutes);
 
 app.use("/api/transparency", transparencyRoutes);
+
+app.use("/api/notifications", notificationRoutes);
 
 export default app;

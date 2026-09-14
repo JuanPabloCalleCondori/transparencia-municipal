@@ -14,6 +14,10 @@ import {
   registerAudit,
 } from "../services/audit.service.js";
 
+import {
+  createNotification,
+} from "../services/notification.service.js";
+
 
 export async function createMotherTask(
   req: Request,
@@ -66,28 +70,69 @@ export async function createMotherTask(
 
     const tarea = await createTask({
       idSolicitud,
+
       idUsuarioAsignado:
         idUsuarioAsignado ?? null,
-      titulo: titulo.trim(),
+
+      titulo:
+        titulo.trim(),
+
       descripcion:
         typeof descripcion === "string"
           ? descripcion.trim()
           : null,
+
       fechaVencimiento:
         fechaVencimiento ?? null,
-      idTareaPadre: null,
+
+      idTareaPadre:
+        null,
     });
 
     await registerAudit({
-      idUsuario: req.user?.idUsuario,
-      entidad: "TAREA",
-      idRegistro: tarea.id_tarea,
-      accion: "CREAR_TAREA_MADRE",
+      idUsuario:
+        req.user?.idUsuario,
+
+      entidad:
+        "TAREA",
+
+      idRegistro:
+        tarea.id_tarea,
+
+      accion:
+        "CREAR_TAREA_MADRE",
+
       descripcion:
         `Se creó la tarea madre "${tarea.titulo}"`,
-      datosNuevos: tarea,
-      ipOrigen: req.ip,
+
+      datosNuevos:
+        tarea,
+
+      ipOrigen:
+        req.ip,
     });
+
+    /*
+     * Si la tarea fue asignada a un usuario,
+     * generamos una notificación automática.
+     */
+    if (
+      tarea.id_usuario_asignado
+    ) {
+      await createNotification({
+        idUsuario:
+          tarea.id_usuario_asignado,
+
+        titulo:
+          "Nueva tarea SIA asignada",
+
+        mensaje:
+          `Se te ha asignado la tarea "${tarea.titulo}" asociada a la solicitud SIA N.º ${idSolicitud}.`,
+
+        tipo:
+          "TAREA",
+      });
+    }
 
     return res.status(201).json({
       status: "ok",
@@ -161,28 +206,68 @@ export async function createSubtask(
 
     const tarea = await createTask({
       idSolicitud,
+
       idUsuarioAsignado:
         idUsuarioAsignado ?? null,
-      titulo: titulo.trim(),
+
+      titulo:
+        titulo.trim(),
+
       descripcion:
         typeof descripcion === "string"
           ? descripcion.trim()
           : null,
+
       fechaVencimiento:
         fechaVencimiento ?? null,
+
       idTareaPadre,
     });
 
     await registerAudit({
-      idUsuario: req.user?.idUsuario,
-      entidad: "TAREA",
-      idRegistro: tarea.id_tarea,
-      accion: "CREAR_SUBTAREA",
+      idUsuario:
+        req.user?.idUsuario,
+
+      entidad:
+        "TAREA",
+
+      idRegistro:
+        tarea.id_tarea,
+
+      accion:
+        "CREAR_SUBTAREA",
+
       descripcion:
         `Se creó la subtarea "${tarea.titulo}"`,
-      datosNuevos: tarea,
-      ipOrigen: req.ip,
+
+      datosNuevos:
+        tarea,
+
+      ipOrigen:
+        req.ip,
     });
+
+    /*
+     * Notificación automática
+     * al usuario asignado.
+     */
+    if (
+      tarea.id_usuario_asignado
+    ) {
+      await createNotification({
+        idUsuario:
+          tarea.id_usuario_asignado,
+
+        titulo:
+          "Nueva subtarea SIA asignada",
+
+        mensaje:
+          `Se te ha asignado la subtarea "${tarea.titulo}" asociada a la solicitud SIA N.º ${idSolicitud}.`,
+
+        tipo:
+          "TAREA",
+      });
+    }
 
     return res.status(201).json({
       status: "ok",
@@ -226,7 +311,8 @@ export async function listTasks(
 
     return res.status(200).json({
       status: "ok",
-      total: tareas.length,
+      total:
+        tareas.length,
       tareas,
     });
   } catch (error) {
@@ -294,7 +380,9 @@ export async function updateTaskStatus(
     const idTarea =
       Number(req.params.taskId);
 
-    const { estado } = req.body;
+    const {
+      estado,
+    } = req.body;
 
     if (
       !Number.isInteger(idSolicitud) ||
@@ -334,24 +422,36 @@ export async function updateTaskStatus(
       );
 
     await registerAudit({
-      idUsuario: req.user?.idUsuario,
-      entidad: "TAREA",
-      idRegistro: idTarea,
+      idUsuario:
+        req.user?.idUsuario,
+
+      entidad:
+        "TAREA",
+
+      idRegistro:
+        idTarea,
+
       accion:
         "CAMBIAR_ESTADO_TAREA",
+
       descripcion:
         `La tarea "${tareaAnterior.titulo}" cambió de ${tareaAnterior.estado} a ${tarea.estado}`,
+
       datosAnteriores: {
         estado:
           tareaAnterior.estado,
       },
+
       datosNuevos: {
         estado:
           tarea.estado,
+
         fechaCompletada:
           tarea.fecha_completada,
       },
-      ipOrigen: req.ip,
+
+      ipOrigen:
+        req.ip,
     });
 
     return res.status(200).json({
@@ -425,10 +525,20 @@ function handleTaskError(
           message:
             "Estado de tarea inválido",
         });
+
+      case "USUARIO_NOTIFICACION_INVALIDO":
+        return res.status(400).json({
+          status: "error",
+          message:
+            "No fue posible generar la notificación porque el usuario asignado es inválido",
+        });
     }
   }
 
-  console.error(`${context}:`, error);
+  console.error(
+    `${context}:`,
+    error
+  );
 
   return res.status(500).json({
     status: "error",
