@@ -8,6 +8,8 @@ import userRoutes from "./routes/user.routes.js";
 import siaRoutes from "./routes/sia.routes.js";
 import taskRoutes from "./routes/task.routes.js";
 
+import commentRoutes from "./routes/comment.routes.js";
+
 const app = express();
 
 app.use(cors());
@@ -20,5 +22,7 @@ app.use("/api/users", userRoutes);
 app.use("/api/sia", siaRoutes);
 
 app.use("/api/sia/:id/tasks", taskRoutes);
+
+app.use("/api/sia/:id/comments", commentRoutes);
 
 export default app;
