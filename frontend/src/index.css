@@ -1938,3 +1938,137 @@ button {
     flex-direction: column;
   }
 }
+
+/* ================================
+   ASIGNACIÓN SIA
+   ================================ */
+
+.assignment-section {
+  margin-top: 26px;
+  padding-top: 22px;
+
+  border-top: 1px solid #e2e8f0;
+}
+
+.assignment-section
+.detail-section-title {
+  margin-bottom: 16px;
+}
+
+.assignment-section h3 {
+  margin: 0;
+
+  font-size: 13px;
+  color: #0f172a;
+}
+
+
+.assignment-grid {
+  display: grid;
+
+  grid-template-columns:
+    repeat(2, minmax(0, 1fr));
+
+  gap: 16px;
+}
+
+
+.form-group {
+  display: flex;
+  flex-direction: column;
+
+  gap: 6px;
+}
+
+
+.form-group label {
+  font-size: 11px;
+  font-weight: 700;
+
+  color: #475569;
+}
+
+
+.form-group select {
+  width: 100%;
+
+  padding: 10px 12px;
+
+  border: 1px solid #cbd5e1;
+  border-radius: 6px;
+
+  background: white;
+
+  color: #334155;
+
+  font-size: 12px;
+}
+
+
+.form-group select:focus {
+  outline: none;
+
+  border-color: #0891b2;
+}
+
+
+.form-group select:disabled {
+  background: #f8fafc;
+
+  color: #94a3b8;
+
+  cursor: not-allowed;
+}
+
+
+.assignment-actions {
+  display: flex;
+  justify-content: flex-end;
+
+  margin-top: 16px;
+}
+
+
+.assignment-warning {
+  margin: 12px 0 0;
+
+  font-size: 11px;
+  color: #b45309;
+}
+
+
+.form-error {
+  margin-top: 12px;
+
+  padding: 10px 12px;
+
+  border-radius: 6px;
+
+  background: #fef2f2;
+
+  color: #b91c1c;
+
+  font-size: 11px;
+}
+
+
+.form-success {
+  margin-top: 12px;
+
+  padding: 10px 12px;
+
+  border-radius: 6px;
+
+  background: #f0fdf4;
+
+  color: #166534;
+
+  font-size: 11px;
+}
+
+
+@media (max-width: 600px) {
+  .assignment-grid {
+    grid-template-columns: 1fr;
+  }
+}

@@ -3,6 +3,9 @@ import {
 } from "./api";
 
 import type {
+  AssignSiaRequest,
+  AssignSiaResponse,
+  AssignmentOptionsResponse,
   CreateSiaRequest,
   CreateSiaResponse,
   SiaDetailResponse,
@@ -45,5 +48,27 @@ export async function getSiaRequestById(
 ): Promise<SiaDetailResponse> {
   return apiRequest<SiaDetailResponse>(
     `/sia/${id}`
+  );
+}
+
+export async function getAssignmentOptions(): Promise<
+  AssignmentOptionsResponse
+> {
+  return apiRequest<AssignmentOptionsResponse>(
+    "/sia/assignment-options"
+  );
+}
+
+
+export async function assignSiaRequest(
+  idSolicitud: number,
+  data: AssignSiaRequest
+): Promise<AssignSiaResponse> {
+  return apiRequest<AssignSiaResponse>(
+    `/sia/${idSolicitud}/assign`,
+    {
+      method: "PATCH",
+      body: JSON.stringify(data),
+    }
   );
 }

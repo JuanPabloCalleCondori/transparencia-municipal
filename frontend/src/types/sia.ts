@@ -8,7 +8,7 @@ export interface SiaRequest {
   folio: string;
 
   nombre_solicitante: string;
-  email_solicitante: string;
+  email_solicitante: string | null;
 
   descripcion: string;
 
@@ -25,7 +25,11 @@ export interface SiaRequest {
   departamento: string | null;
 
   id_responsable: number | null;
-  responsable: string | null;
+
+  responsable?: string | null;
+  responsable_nombre?: string | null;
+  responsable_apellido?: string | null;
+  responsable_email?: string | null;
 }
 
 export interface SiaListResponse {
@@ -56,4 +60,34 @@ export interface SiaDetailResponse {
   status: string;
   solicitud: SiaRequest;
   plazo: SiaDeadline;
+}
+
+export interface AssignmentDepartment {
+  id_departamento: number;
+  nombre: string;
+}
+
+export interface AssignmentUser {
+  id_usuario: number;
+  nombre: string;
+  apellido: string;
+  id_departamento: number;
+  departamento: string;
+}
+
+export interface AssignmentOptionsResponse {
+  status: string;
+  departamentos: AssignmentDepartment[];
+  usuarios: AssignmentUser[];
+}
+
+export interface AssignSiaRequest {
+  idDepartamento: number;
+  idResponsable: number;
+}
+
+export interface AssignSiaResponse {
+  status: string;
+  message: string;
+  solicitud: SiaRequest;
 }
