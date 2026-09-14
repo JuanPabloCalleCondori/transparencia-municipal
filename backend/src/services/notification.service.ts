@@ -295,3 +295,61 @@ export async function markAllNotificationsAsRead(
       result.rowCount ?? 0,
   };
 }
+
+/* =========================================================
+   VERIFICAR NOTIFICACIÓN DUPLICADA DEL DÍA
+   ========================================================= */
+
+export async function notificationExistsToday(
+  idUsuario: number,
+  titulo: string,
+  mensaje: string
+): Promise<boolean> {
+  const result =
+    await pool.query(
+      `
+      SELECT id_notificacion
+
+      FROM notificaciones
+
+      WHERE id_usuario = $1
+        AND titulo = $2
+        AND mensaje = $3
+        AND fecha_creacion::date =
+            CURRENT_DATE
+
+      LIMIT 1
+      `,
+      [
+        idUsuario,
+        titulo,
+        mensaje,
+      ]
+    );
+
+  return (
+    (result.rowCount ?? 0) > 0
+  );
+}
+
+
+/* =========================================================
+   CREAR NOTIFICACIÓN SOLO SI NO EXISTE HOY
+   ========================================================= */
+
+export async function createNotificationOnceToday(
+  data: CreateNotificationData
+) {
+  const exists =
+    await notificationExistsToday(
+      data.idUsuario,
+      data.titulo,
+      data.mensaje
+    );
+
+  if (exists) {
+    return null;
+  }
+
+  return createNotification(data);
+}
