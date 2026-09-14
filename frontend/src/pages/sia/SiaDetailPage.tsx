@@ -33,6 +33,9 @@ import SiaTasksSection
 import SiaCommentsSection
   from "../../components/sia/SiaCommentsSection";
 
+import SiaDocumentsSection
+  from "../../components/sia/SiaDocumentsSection";
+
 
 function formatState(
   state?: string | null
@@ -1399,6 +1402,13 @@ export default function SiaDetailPage() {
         }
               closed={closed}
         />
+        <SiaDocumentsSection
+              idSolicitud={
+                request.id_solicitud
+        }
+              closed={closed}
+        />
+
         </div>
 
 
