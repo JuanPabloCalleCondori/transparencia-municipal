@@ -10,6 +10,9 @@ import Layout from "./components/Layout";
 import LoginPage from "./pages/LoginPage";
 import DashboardPage from "./pages/DashboardPage";
 
+import SiaListPage from "./pages/sia/SiaListPage";
+
+
 function TemporaryPage({
   title,
 }: {
@@ -60,11 +63,7 @@ export default function App() {
 
           <Route
             path="/sia"
-            element={
-              <TemporaryPage
-                title="Solicitudes SIA"
-              />
-            }
+            element={<SiaListPage />}
           />
 
           <Route

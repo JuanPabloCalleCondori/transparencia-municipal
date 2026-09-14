@@ -982,3 +982,408 @@ button {
     grid-template-columns: 1fr;
   }
 }
+/* ================================
+   BOTÓN PRINCIPAL
+   ================================ */
+
+.primary-button {
+  padding: 10px 16px;
+
+  border: 0;
+  border-radius: 8px;
+
+  background: #155e75;
+  color: white;
+
+  font-weight: 600;
+}
+
+.primary-button:hover {
+  background: #164e63;
+}
+
+
+/* ================================
+   RESUMEN SIA
+   ================================ */
+
+.sia-summary {
+  display: grid;
+  grid-template-columns:
+    repeat(3, 180px);
+
+  gap: 12px;
+
+  margin-bottom: 18px;
+}
+
+.sia-summary div {
+  padding: 14px 16px;
+
+  border: 1px solid #e2e8f0;
+  border-radius: 9px;
+
+  background: white;
+}
+
+.sia-summary span,
+.sia-summary strong {
+  display: block;
+}
+
+.sia-summary span {
+  color: #64748b;
+  font-size: 11px;
+  font-weight: 600;
+}
+
+.sia-summary strong {
+  margin-top: 4px;
+
+  color: #0f172a;
+  font-size: 21px;
+}
+
+
+/* ================================
+   TOOLBAR
+   ================================ */
+
+.table-toolbar {
+  display: flex;
+  align-items: flex-end;
+
+  gap: 14px;
+
+  margin-bottom: 20px;
+}
+
+.table-search {
+  flex: 1;
+}
+
+.table-search,
+.table-filter {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+}
+
+.table-toolbar label {
+  color: #475569;
+
+  font-size: 11px;
+  font-weight: 700;
+}
+
+.table-toolbar input,
+.table-toolbar select {
+  min-height: 40px;
+
+  padding: 9px 11px;
+
+  border: 1px solid #cbd5e1;
+  border-radius: 7px;
+
+  background: white;
+  color: #1e293b;
+
+  outline: none;
+}
+
+.table-toolbar input:focus,
+.table-toolbar select:focus {
+  border-color: #0e7490;
+
+  box-shadow:
+    0 0 0 3px
+    rgba(14, 116, 144, 0.1);
+}
+
+.table-filter {
+  min-width: 180px;
+}
+
+.table-refresh {
+  min-height: 40px;
+}
+
+
+/* ================================
+   TABLA
+   ================================ */
+
+.table-container {
+  width: 100%;
+  overflow-x: auto;
+}
+
+.data-table {
+  width: 100%;
+
+  border-collapse: collapse;
+
+  font-size: 13px;
+}
+
+.data-table th {
+  padding: 11px 12px;
+
+  border-bottom:
+    1px solid #e2e8f0;
+
+  color: #64748b;
+
+  text-align: left;
+
+  font-size: 10px;
+  font-weight: 800;
+
+  text-transform: uppercase;
+  letter-spacing: 0.04em;
+}
+
+.data-table td {
+  padding: 14px 12px;
+
+  border-bottom:
+    1px solid #f1f5f9;
+
+  color: #475569;
+
+  vertical-align: middle;
+}
+
+.data-table tbody tr:hover {
+  background: #f8fafc;
+}
+
+.data-table tbody tr:last-child td {
+  border-bottom: 0;
+}
+
+.table-folio {
+  color: #155e75;
+
+  white-space: nowrap;
+}
+
+.table-person {
+  display: flex;
+  flex-direction: column;
+
+  min-width: 150px;
+}
+
+.table-person strong {
+  color: #334155;
+
+  font-size: 12px;
+}
+
+.table-person span {
+  margin-top: 3px;
+
+  color: #94a3b8;
+
+  font-size: 11px;
+}
+
+
+/* ================================
+   ESTADOS
+   ================================ */
+
+.state-badge {
+  display: inline-flex;
+
+  padding: 5px 8px;
+
+  border-radius: 20px;
+
+  background: #f1f5f9;
+  color: #475569;
+
+  font-size: 10px;
+  font-weight: 700;
+
+  white-space: nowrap;
+}
+
+.state-ingresada {
+  background: #eff6ff;
+  color: #1d4ed8;
+}
+
+.state-asignada {
+  background: #f5f3ff;
+  color: #6d28d9;
+}
+
+.state-en_proceso {
+  background: #fff7ed;
+  color: #c2410c;
+}
+
+.state-en_revision {
+  background: #fefce8;
+  color: #a16207;
+}
+
+.state-finalizada {
+  background: #f0fdf4;
+  color: #15803d;
+}
+
+.state-vencida {
+  background: #fef2f2;
+  color: #b91c1c;
+}
+
+.state-cancelada {
+  background: #f1f5f9;
+  color: #64748b;
+}
+
+
+/* ================================
+   SEMÁFORO
+   ================================ */
+
+.deadline-cell {
+  display: flex;
+  align-items: center;
+  gap: 7px;
+
+  white-space: nowrap;
+
+  font-size: 11px;
+}
+
+.traffic-light {
+  width: 9px;
+  height: 9px;
+
+  flex-shrink: 0;
+
+  border-radius: 50%;
+}
+
+.traffic-verde {
+  background: #16a34a;
+}
+
+.traffic-amarillo {
+  background: #eab308;
+}
+
+.traffic-rojo,
+.traffic-overdue {
+  background: #dc2626;
+}
+
+.deadline-closed {
+  color: #64748b;
+
+  font-size: 11px;
+}
+
+
+/* ================================
+   ACCIONES
+   ================================ */
+
+.table-action {
+  padding: 7px 10px;
+
+  border: 1px solid #cbd5e1;
+  border-radius: 6px;
+
+  background: white;
+  color: #155e75;
+
+  font-size: 11px;
+  font-weight: 700;
+
+  white-space: nowrap;
+}
+
+.table-action:hover {
+  border-color: #155e75;
+  background: #f0f9ff;
+}
+
+
+/* ================================
+   MENSAJES
+   ================================ */
+
+.table-message {
+  padding: 30px;
+
+  color: #94a3b8;
+
+  text-align: center;
+
+  font-size: 13px;
+}
+
+.table-error {
+  display: flex;
+  flex-direction: column;
+  align-items: flex-start;
+  gap: 7px;
+
+  padding: 16px;
+
+  border-radius: 8px;
+
+  background: #fef2f2;
+  color: #991b1b;
+
+  font-size: 13px;
+}
+
+.table-error button {
+  margin-top: 4px;
+
+  padding: 7px 10px;
+
+  border: 0;
+  border-radius: 5px;
+
+  background: #991b1b;
+  color: white;
+}
+
+
+/* ================================
+   RESPONSIVE SIA
+   ================================ */
+
+@media (max-width: 900px) {
+  .sia-summary {
+    grid-template-columns:
+      repeat(3, 1fr);
+  }
+
+  .table-toolbar {
+    align-items: stretch;
+    flex-direction: column;
+  }
+
+  .table-filter {
+    min-width: 0;
+  }
+}
+
+@media (max-width: 520px) {
+  .sia-summary {
+    grid-template-columns: 1fr;
+  }
+
+  .page-heading {
+    align-items: flex-start;
+    flex-direction: column;
+  }
+}
