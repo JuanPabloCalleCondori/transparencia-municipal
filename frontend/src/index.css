@@ -1628,3 +1628,313 @@ button {
     width: 100%;
   }
 }
+
+/* ================================
+   DETALLE SIA
+   ================================ */
+
+.back-link {
+  margin: 0 0 8px;
+  padding: 0;
+
+  border: 0;
+
+  background: transparent;
+  color: #155e75;
+
+  font-size: 11px;
+  font-weight: 700;
+
+  cursor: pointer;
+}
+
+.back-link:hover {
+  text-decoration: underline;
+}
+
+
+.sia-detail-title {
+  display: flex;
+  align-items: center;
+
+  gap: 12px;
+}
+
+.sia-detail-title h1 {
+  margin: 0;
+}
+
+.sia-detail-title p {
+  margin: 4px 0 0;
+}
+
+
+.sia-detail-grid {
+  display: grid;
+
+  grid-template-columns:
+    minmax(0, 1fr) 260px;
+
+  gap: 20px;
+
+  align-items: start;
+}
+
+
+.sia-detail-main {
+  display: flex;
+  flex-direction: column;
+
+  gap: 18px;
+}
+
+
+.sia-detail-sidebar {
+  display: flex;
+  flex-direction: column;
+
+  gap: 18px;
+}
+
+
+.detail-section-title {
+  margin-bottom: 20px;
+
+  padding-bottom: 12px;
+
+  border-bottom:
+    1px solid #f1f5f9;
+}
+
+.detail-section-title h2 {
+  margin: 0;
+
+  color: #0f172a;
+
+  font-size: 15px;
+}
+
+
+.detail-data-grid {
+  display: grid;
+
+  grid-template-columns:
+    repeat(2, minmax(0, 1fr));
+
+  gap: 22px 28px;
+}
+
+
+.detail-field {
+  display: flex;
+  flex-direction: column;
+
+  gap: 5px;
+}
+
+
+.detail-field span,
+.detail-description > span {
+  color: #64748b;
+
+  font-size: 10px;
+  font-weight: 700;
+
+  text-transform: uppercase;
+
+  letter-spacing: 0.04em;
+}
+
+
+.detail-field strong {
+  color: #334155;
+
+  font-size: 13px;
+  font-weight: 600;
+}
+
+
+.detail-description {
+  margin-top: 24px;
+
+  padding-top: 18px;
+
+  border-top:
+    1px solid #f1f5f9;
+}
+
+
+.detail-description p {
+  margin: 8px 0 0;
+
+  color: #475569;
+
+  font-size: 13px;
+
+  line-height: 1.7;
+
+  white-space: pre-wrap;
+}
+
+
+/* ================================
+   PLAZO
+   ================================ */
+
+.deadline-card-label {
+  display: block;
+
+  margin-bottom: 14px;
+
+  color: #64748b;
+
+  font-size: 10px;
+  font-weight: 700;
+
+  text-transform: uppercase;
+
+  letter-spacing: 0.04em;
+}
+
+
+.deadline-status {
+  display: flex;
+  align-items: center;
+
+  gap: 8px;
+
+  margin-bottom: 12px;
+}
+
+
+.deadline-status strong {
+  color: #334155;
+
+  font-size: 12px;
+}
+
+
+.traffic-large {
+  width: 12px;
+  height: 12px;
+}
+
+
+.deadline-number {
+  color: #0f172a;
+
+  font-size: 34px;
+  font-weight: 700;
+
+  line-height: 1;
+}
+
+
+.deadline-unit {
+  display: block;
+
+  margin-top: 5px;
+
+  color: #64748b;
+
+  font-size: 11px;
+}
+
+
+.deadline-date {
+  margin-top: 18px;
+
+  padding-top: 13px;
+
+  border-top:
+    1px solid #f1f5f9;
+
+  color: #64748b;
+
+  font-size: 11px;
+}
+
+
+.deadline-date strong {
+  color: #334155;
+}
+
+
+.deadline-card-title {
+  display: block;
+
+  color: #334155;
+
+  font-size: 14px;
+}
+
+
+.deadline-card p {
+  margin: 7px 0 0;
+
+  color: #64748b;
+
+  font-size: 11px;
+
+  line-height: 1.5;
+}
+
+
+/* ================================
+   IDENTIFICACIÓN
+   ================================ */
+
+.detail-status-card {
+  display: grid;
+
+  grid-template-columns:
+    1fr auto;
+
+  gap: 10px;
+}
+
+
+.detail-status-card span {
+  color: #64748b;
+
+  font-size: 10px;
+}
+
+
+.detail-status-card strong {
+  color: #334155;
+
+  font-size: 10px;
+
+  text-align: right;
+}
+
+
+@media (max-width: 900px) {
+  .sia-detail-grid {
+    grid-template-columns: 1fr;
+  }
+
+  .sia-detail-sidebar {
+    display: grid;
+
+    grid-template-columns:
+      repeat(2, 1fr);
+  }
+}
+
+
+@media (max-width: 600px) {
+  .detail-data-grid {
+    grid-template-columns: 1fr;
+  }
+
+  .sia-detail-sidebar {
+    display: flex;
+  }
+
+  .sia-detail-title {
+    align-items: flex-start;
+    flex-direction: column;
+  }
+}

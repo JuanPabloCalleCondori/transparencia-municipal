@@ -5,9 +5,12 @@ import {
 import type {
   CreateSiaRequest,
   CreateSiaResponse,
+  SiaDetailResponse,
   SiaListResponse,
   SiaRequest,
 } from "../types/sia";
+
+
 
 
 export async function getSiaRequests(): Promise<
@@ -34,5 +37,13 @@ export async function createSiaRequest(
         data
       ),
     }
+  );
+}
+
+export async function getSiaRequestById(
+  id: number
+): Promise<SiaDetailResponse> {
+  return apiRequest<SiaDetailResponse>(
+    `/sia/${id}`
   );
 }

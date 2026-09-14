@@ -35,13 +35,25 @@ export interface SiaListResponse {
 }
 
 export interface CreateSiaRequest {
-  nombre_solicitante: string;
-  email_solicitante: string;
-  descripcion: string;
-}
-
-export interface CreateSiaRequest {
   nombreSolicitante: string;
   emailSolicitante?: string;
   descripcion: string;
+}
+
+export interface CreateSiaResponse {
+  status: string;
+  message?: string;
+  solicitud: SiaRequest;
+}
+
+export interface SiaDeadline {
+  diasRestantes: number;
+  semaforo: string;
+  vencida: boolean;
+}
+
+export interface SiaDetailResponse {
+  status: string;
+  solicitud: SiaRequest;
+  plazo: SiaDeadline;
 }

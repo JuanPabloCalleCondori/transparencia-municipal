@@ -14,6 +14,8 @@ import SiaListPage from "./pages/sia/SiaListPage";
 
 import SiaCreatePage from "./pages/sia/SiaCreatePage";
 
+import SiaDetailPage from "./pages/sia/SiaDetailPage";
+
 
 function TemporaryPage({
   title,
@@ -71,6 +73,11 @@ export default function App() {
           <Route
             path="/sia/new"
             element={<SiaCreatePage />}
+          />
+
+          <Route
+            path="/sia/:id"
+            element={<SiaDetailPage />}
           />
 
           <Route
