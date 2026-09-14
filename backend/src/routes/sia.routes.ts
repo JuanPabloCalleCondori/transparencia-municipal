@@ -7,6 +7,7 @@ import {
   assign,
   changeStatus,
   history,
+  createExtension,
 } from "../controllers/sia.controller.js";
 
 import {
@@ -17,22 +18,55 @@ import {
   authorizeRoles,
 } from "../middlewares/role.middleware.js";
 
-const router = Router();
 
-router.use(authenticateToken);
+const router =
+  Router();
 
-router.get("/", list);
 
+/*
+ * Todas las rutas SIA
+ * requieren autenticación.
+ */
+router.use(
+  authenticateToken
+);
+
+
+/*
+ * Listar solicitudes.
+ */
+router.get(
+  "/",
+  list
+);
+
+
+/*
+ * Historial de auditoría.
+ *
+ * Importante:
+ * esta ruta debe ir antes de /:id
+ * para evitar conflictos.
+ */
 router.get(
   "/:id/history",
   history
 );
 
+
+/*
+ * Obtener solicitud
+ * por ID.
+ */
 router.get(
   "/:id",
   getById
 );
 
+
+/*
+ * Crear solicitud SIA.
+ */
 router.post(
   "/",
   authorizeRoles(
@@ -42,6 +76,11 @@ router.post(
   create
 );
 
+
+/*
+ * Asignar departamento
+ * y responsable.
+ */
 router.patch(
   "/:id/assign",
   authorizeRoles(
@@ -51,6 +90,10 @@ router.patch(
   assign
 );
 
+
+/*
+ * Cambiar estado.
+ */
 router.patch(
   "/:id/status",
   authorizeRoles(
@@ -60,5 +103,21 @@ router.patch(
   ),
   changeStatus
 );
+
+
+/*
+ * Aplicar prórroga
+ * de 10 días hábiles.
+ */
+router.post(
+  "/:id/extensions",
+  authorizeRoles(
+    "ADMINISTRADOR_MUNICIPAL",
+    "ENLACE_MUNICIPAL",
+    "DIRECTOR_AREA"
+  ),
+  createExtension
+);
+
 
 export default router;

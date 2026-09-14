@@ -13,8 +13,16 @@ import {
   getAuditByRecord,
 } from "../services/audit.service.js";
 
+import {
+  calculateDeadlineInfo,
+  extendDeadline,
+} from "../services/deadline.service.js";
 
-export async function create(req: Request, res: Response) {
+
+export async function create(
+  req: Request,
+  res: Response
+) {
   try {
     const {
       nombreSolicitante,
@@ -42,30 +50,51 @@ export async function create(req: Request, res: Response) {
     ) {
       return res.status(400).json({
         status: "error",
-        message: "Email del solicitante inválido",
+        message:
+          "Email del solicitante inválido",
       });
     }
 
-    const solicitud = await createSiaRequest({
-      nombreSolicitante: nombreSolicitante.trim(),
-      emailSolicitante:
-        emailSolicitante?.trim() || null,
-      descripcion: descripcion.trim(),
-    });
+    const solicitud =
+      await createSiaRequest({
+        nombreSolicitante:
+          nombreSolicitante.trim(),
+
+        emailSolicitante:
+          emailSolicitante?.trim() ||
+          null,
+
+        descripcion:
+          descripcion.trim(),
+      });
 
     await registerAudit({
-      idUsuario: req.user?.idUsuario,
-      entidad: "SOLICITUD_SIA",
-      idRegistro: solicitud.id_solicitud,
-      accion: "CREAR_SOLICITUD",
-      descripcion: `Se creó la solicitud ${solicitud.folio}`,
-      datosNuevos: solicitud,
-      ipOrigen: req.ip,
+      idUsuario:
+        req.user?.idUsuario,
+
+      entidad:
+        "SOLICITUD_SIA",
+
+      idRegistro:
+        solicitud.id_solicitud,
+
+      accion:
+        "CREAR_SOLICITUD",
+
+      descripcion:
+        `Se creó la solicitud ${solicitud.folio}`,
+
+      datosNuevos:
+        solicitud,
+
+      ipOrigen:
+        req.ip,
     });
 
     return res.status(201).json({
       status: "ok",
-      message: "Solicitud SIA registrada correctamente",
+      message:
+        "Solicitud SIA registrada correctamente",
       solicitud,
     });
   } catch (error) {
@@ -76,7 +105,8 @@ export async function create(req: Request, res: Response) {
 
     return res.status(500).json({
       status: "error",
-      message: "Error interno del servidor",
+      message:
+        "Error interno del servidor",
     });
   }
 }
@@ -87,11 +117,13 @@ export async function list(
   res: Response
 ) {
   try {
-    const solicitudes = await getSiaRequests();
+    const solicitudes =
+      await getSiaRequests();
 
     return res.status(200).json({
       status: "ok",
-      total: solicitudes.length,
+      total:
+        solicitudes.length,
       solicitudes,
     });
   } catch (error) {
@@ -102,7 +134,8 @@ export async function list(
 
     return res.status(500).json({
       status: "error",
-      message: "Error interno del servidor",
+      message:
+        "Error interno del servidor",
     });
   }
 }
@@ -113,33 +146,56 @@ export async function getById(
   res: Response
 ) {
   try {
-    const idSolicitud = Number(req.params.id);
+    const idSolicitud =
+      Number(req.params.id);
 
     if (
-      !Number.isInteger(idSolicitud) ||
+      !Number.isInteger(
+        idSolicitud
+      ) ||
       idSolicitud <= 0
     ) {
       return res.status(400).json({
         status: "error",
-        message: "ID de solicitud inválido",
+        message:
+          "ID de solicitud inválido",
       });
     }
 
     const solicitud =
-      await getSiaRequestById(idSolicitud);
+      await getSiaRequestById(
+        idSolicitud
+      );
+
+    /*
+     * Calculamos la información
+     * relacionada con el plazo.
+     */
+    const plazo =
+      calculateDeadlineInfo(
+        new Date(
+          solicitud.fecha_ingreso
+        ),
+        new Date(
+          solicitud.fecha_vencimiento
+        )
+      );
 
     return res.status(200).json({
       status: "ok",
       solicitud,
+      plazo,
     });
   } catch (error) {
     if (
       error instanceof Error &&
-      error.message === "SOLICITUD_NO_ENCONTRADA"
+      error.message ===
+        "SOLICITUD_NO_ENCONTRADA"
     ) {
       return res.status(404).json({
         status: "error",
-        message: "Solicitud SIA no encontrada",
+        message:
+          "Solicitud SIA no encontrada",
       });
     }
 
@@ -150,7 +206,8 @@ export async function getById(
 
     return res.status(500).json({
       status: "error",
-      message: "Error interno del servidor",
+      message:
+        "Error interno del servidor",
     });
   }
 }
@@ -161,7 +218,8 @@ export async function assign(
   res: Response
 ) {
   try {
-    const idSolicitud = Number(req.params.id);
+    const idSolicitud =
+      Number(req.params.id);
 
     const {
       idDepartamento,
@@ -169,18 +227,25 @@ export async function assign(
     } = req.body;
 
     if (
-      !Number.isInteger(idSolicitud) ||
+      !Number.isInteger(
+        idSolicitud
+      ) ||
       idSolicitud <= 0
     ) {
       return res.status(400).json({
         status: "error",
-        message: "ID de solicitud inválido",
+        message:
+          "ID de solicitud inválido",
       });
     }
 
     if (
-      !Number.isInteger(idDepartamento) ||
-      !Number.isInteger(idResponsable)
+      !Number.isInteger(
+        idDepartamento
+      ) ||
+      !Number.isInteger(
+        idResponsable
+      )
     ) {
       return res.status(400).json({
         status: "error",
@@ -190,37 +255,54 @@ export async function assign(
     }
 
     /*
-     * Guardamos el estado actual de la solicitud
-     * antes de modificarla.
+     * Guardamos el estado actual
+     * antes de modificar.
      */
     const solicitudAnterior =
-      await getSiaRequestById(idSolicitud);
+      await getSiaRequestById(
+        idSolicitud
+      );
 
-    const solicitud = await assignSiaRequest(
-      idSolicitud,
-      idDepartamento,
-      idResponsable
-    );
+    const solicitud =
+      await assignSiaRequest(
+        idSolicitud,
+        idDepartamento,
+        idResponsable
+      );
 
     /*
-     * Registramos quién realizó la asignación,
-     * además del estado anterior y nuevo.
+     * Registramos la asignación.
      */
     await registerAudit({
-      idUsuario: req.user?.idUsuario,
-      entidad: "SOLICITUD_SIA",
-      idRegistro: idSolicitud,
-      accion: "ASIGNAR_SOLICITUD",
+      idUsuario:
+        req.user?.idUsuario,
+
+      entidad:
+        "SOLICITUD_SIA",
+
+      idRegistro:
+        idSolicitud,
+
+      accion:
+        "ASIGNAR_SOLICITUD",
+
       descripcion:
         `Se asignó la solicitud ${solicitudAnterior.folio}`,
-      datosAnteriores: solicitudAnterior,
-      datosNuevos: solicitud,
-      ipOrigen: req.ip,
+
+      datosAnteriores:
+        solicitudAnterior,
+
+      datosNuevos:
+        solicitud,
+
+      ipOrigen:
+        req.ip,
     });
 
     return res.status(200).json({
       status: "ok",
-      message: "Solicitud asignada correctamente",
+      message:
+        "Solicitud asignada correctamente",
       solicitud,
     });
   } catch (error) {
@@ -231,7 +313,8 @@ export async function assign(
       ) {
         return res.status(404).json({
           status: "error",
-          message: "Solicitud SIA no encontrada",
+          message:
+            "Solicitud SIA no encontrada",
         });
       }
 
@@ -241,7 +324,8 @@ export async function assign(
       ) {
         return res.status(400).json({
           status: "error",
-          message: "Departamento inválido",
+          message:
+            "Departamento inválido",
         });
       }
 
@@ -275,7 +359,8 @@ export async function assign(
 
     return res.status(500).json({
       status: "error",
-      message: "Error interno del servidor",
+      message:
+        "Error interno del servidor",
     });
   }
 }
@@ -286,56 +371,86 @@ export async function changeStatus(
   res: Response
 ) {
   try {
-    const idSolicitud = Number(req.params.id);
-    const { idEstado } = req.body;
+    const idSolicitud =
+      Number(req.params.id);
+
+    const {
+      idEstado,
+    } = req.body;
 
     if (
-      !Number.isInteger(idSolicitud) ||
+      !Number.isInteger(
+        idSolicitud
+      ) ||
       idSolicitud <= 0
     ) {
       return res.status(400).json({
         status: "error",
-        message: "ID de solicitud inválido",
+        message:
+          "ID de solicitud inválido",
       });
     }
 
-    if (!Number.isInteger(idEstado)) {
+    if (
+      !Number.isInteger(
+        idEstado
+      )
+    ) {
       return res.status(400).json({
         status: "error",
-        message: "Estado inválido",
+        message:
+          "Estado inválido",
       });
     }
 
     /*
-     * Obtenemos la solicitud antes de modificarla
-     * para guardar el estado anterior.
+     * Guardamos la solicitud
+     * antes del cambio.
      */
     const solicitudAnterior =
-      await getSiaRequestById(idSolicitud);
+      await getSiaRequestById(
+        idSolicitud
+      );
 
-    const solicitud = await changeSiaStatus(
-      idSolicitud,
-      idEstado
-    );
+    const solicitud =
+      await changeSiaStatus(
+        idSolicitud,
+        idEstado
+      );
 
     await registerAudit({
-      idUsuario: req.user?.idUsuario,
-      entidad: "SOLICITUD_SIA",
-      idRegistro: idSolicitud,
-      accion: "CAMBIAR_ESTADO",
+      idUsuario:
+        req.user?.idUsuario,
+
+      entidad:
+        "SOLICITUD_SIA",
+
+      idRegistro:
+        idSolicitud,
+
+      accion:
+        "CAMBIAR_ESTADO",
+
       descripcion:
         `La solicitud ${solicitudAnterior.folio} cambió de estado`,
+
       datosAnteriores: {
         idEstado:
-          solicitudAnterior.id_estado,
+          solicitudAnterior
+            .id_estado,
+
         estado:
-          solicitudAnterior.estado,
+          solicitudAnterior
+            .estado,
       },
+
       datosNuevos: {
         idEstado:
           solicitud.id_estado,
       },
-      ipOrigen: req.ip,
+
+      ipOrigen:
+        req.ip,
     });
 
     return res.status(200).json({
@@ -352,7 +467,8 @@ export async function changeStatus(
       ) {
         return res.status(404).json({
           status: "error",
-          message: "Solicitud SIA no encontrada",
+          message:
+            "Solicitud SIA no encontrada",
         });
       }
 
@@ -375,7 +491,196 @@ export async function changeStatus(
 
     return res.status(500).json({
       status: "error",
-      message: "Error interno del servidor",
+      message:
+        "Error interno del servidor",
+    });
+  }
+}
+
+
+export async function createExtension(
+  req: Request,
+  res: Response
+) {
+  try {
+    const idSolicitud =
+      Number(req.params.id);
+
+    const {
+      motivo,
+    } = req.body;
+
+    if (
+      !Number.isInteger(
+        idSolicitud
+      ) ||
+      idSolicitud <= 0
+    ) {
+      return res.status(400).json({
+        status: "error",
+        message:
+          "ID de solicitud inválido",
+      });
+    }
+
+    if (
+      typeof motivo !== "string" ||
+      !motivo.trim()
+    ) {
+      return res.status(400).json({
+        status: "error",
+        message:
+          "El motivo de la prórroga es obligatorio",
+      });
+    }
+
+    if (
+      !req.user?.idUsuario
+    ) {
+      return res.status(401).json({
+        status: "error",
+        message:
+          "Usuario no autenticado",
+      });
+    }
+
+    /*
+     * Guardamos los datos originales
+     * para la auditoría.
+     */
+    const solicitudAnterior =
+      await getSiaRequestById(
+        idSolicitud
+      );
+
+    /*
+     * Aplicamos la prórroga
+     * de 10 días hábiles.
+     */
+    const resultado =
+      await extendDeadline(
+        idSolicitud,
+        req.user.idUsuario,
+        motivo.trim()
+      );
+
+    /*
+     * Obtenemos nuevamente
+     * la solicitud actualizada.
+     */
+    const solicitudActualizada =
+      await getSiaRequestById(
+        idSolicitud
+      );
+
+    await registerAudit({
+      idUsuario:
+        req.user.idUsuario,
+
+      entidad:
+        "SOLICITUD_SIA",
+
+      idRegistro:
+        idSolicitud,
+
+      accion:
+        "APLICAR_PRORROGA",
+
+      descripcion:
+        `Se aplicó una prórroga de 10 días hábiles a la solicitud ${solicitudAnterior.folio}`,
+
+      datosAnteriores: {
+        fechaVencimiento:
+          solicitudAnterior
+            .fecha_vencimiento,
+
+        tieneProrroga:
+          solicitudAnterior
+            .tiene_prorroga,
+      },
+
+      datosNuevos: {
+        fechaVencimiento:
+          solicitudActualizada
+            .fecha_vencimiento,
+
+        tieneProrroga:
+          solicitudActualizada
+            .tiene_prorroga,
+
+        numeroResolucion:
+          resultado
+            .prorroga
+            .numero_resolucion,
+      },
+
+      ipOrigen:
+        req.ip,
+    });
+
+    /*
+     * Recalculamos el plazo
+     * después de la prórroga.
+     */
+    const plazo =
+      calculateDeadlineInfo(
+        new Date(
+          solicitudActualizada
+            .fecha_ingreso
+        ),
+        new Date(
+          solicitudActualizada
+            .fecha_vencimiento
+        )
+      );
+
+    return res.status(201).json({
+      status: "ok",
+      message:
+        "Prórroga aplicada correctamente",
+
+      solicitud:
+        solicitudActualizada,
+
+      prorroga:
+        resultado.prorroga,
+
+      plazo,
+    });
+  } catch (error) {
+    if (error instanceof Error) {
+      if (
+        error.message ===
+        "SOLICITUD_NO_ENCONTRADA"
+      ) {
+        return res.status(404).json({
+          status: "error",
+          message:
+            "Solicitud SIA no encontrada",
+        });
+      }
+
+      if (
+        error.message ===
+        "PRORROGA_YA_EXISTENTE"
+      ) {
+        return res.status(409).json({
+          status: "error",
+          message:
+            "La solicitud ya posee una prórroga",
+        });
+      }
+    }
+
+    console.error(
+      "Error aplicando prórroga:",
+      error
+    );
+
+    return res.status(500).json({
+      status: "error",
+      message:
+        "Error interno del servidor",
     });
   }
 }
@@ -386,24 +691,30 @@ export async function history(
   res: Response
 ) {
   try {
-    const idSolicitud = Number(req.params.id);
+    const idSolicitud =
+      Number(req.params.id);
 
     if (
-      !Number.isInteger(idSolicitud) ||
+      !Number.isInteger(
+        idSolicitud
+      ) ||
       idSolicitud <= 0
     ) {
       return res.status(400).json({
         status: "error",
-        message: "ID de solicitud inválido",
+        message:
+          "ID de solicitud inválido",
       });
     }
 
     /*
-     * Verificamos que la solicitud exista
-     * antes de consultar su historial.
+     * Verificamos que exista
+     * antes de consultar historial.
      */
     const solicitud =
-      await getSiaRequestById(idSolicitud);
+      await getSiaRequestById(
+        idSolicitud
+      );
 
     const historial =
       await getAuditByRecord(
@@ -413,13 +724,18 @@ export async function history(
 
     return res.status(200).json({
       status: "ok",
+
       solicitud: {
         idSolicitud:
           solicitud.id_solicitud,
+
         folio:
           solicitud.folio,
       },
-      total: historial.length,
+
+      total:
+        historial.length,
+
       historial,
     });
   } catch (error) {
@@ -442,7 +758,8 @@ export async function history(
 
     return res.status(500).json({
       status: "error",
-      message: "Error interno del servidor",
+      message:
+        "Error interno del servidor",
     });
   }
 }
