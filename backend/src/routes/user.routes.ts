@@ -4,6 +4,7 @@ import {
   list,
   update,
   deactivate,
+  activate,
   options,
 } from "../controllers/user.controller.js";
 
@@ -20,5 +21,5 @@ router.get("/", list);
 router.post("/", create);
 router.patch("/:id", update);
 router.patch("/:id/deactivate", deactivate);
-
+router.patch("/:id/activate", activate);  
 export default router;

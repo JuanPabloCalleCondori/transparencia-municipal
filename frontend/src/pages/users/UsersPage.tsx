@@ -6,6 +6,7 @@ import {
 } from "react";
 
 import {
+  activateUser,
   createUser,
   deactivateUser,
   getUserOptions,
@@ -190,6 +191,14 @@ export default function UsersPage() {
   const [
     deactivatingId,
     setDeactivatingId,
+  ] = useState<
+    number | null
+  >(null);
+
+
+  const [
+    activatingId,
+    setActivatingId,
   ] = useState<
     number | null
   >(null);
@@ -650,6 +659,56 @@ export default function UsersPage() {
   }
 
 
+  async function handleActivate(
+    selectedUser:
+      ManagedUser
+  ) {
+    const confirmed =
+      window.confirm(
+        `¿Deseas reactivar a ${selectedUser.nombre} ${selectedUser.apellido}?`
+      );
+
+
+    if (!confirmed) {
+      return;
+    }
+
+
+    try {
+      setActivatingId(
+        selectedUser
+          .id_usuario
+      );
+
+      setError("");
+      setSuccess("");
+
+      const response =
+        await activateUser(
+          selectedUser
+            .id_usuario
+        );
+
+      setSuccess(
+        response.message
+      );
+
+      await loadData();
+
+    } catch (error) {
+      setError(
+        error instanceof Error
+          ? error.message
+          : "No fue posible reactivar el usuario."
+      );
+    } finally {
+      setActivatingId(
+        null
+      );
+    }
+  }
+
+
   return (
     <div className="users-page">
 
@@ -948,19 +1007,15 @@ export default function UsersPage() {
                           </button>
 
 
-                          {managedUser
-                            .activo && (
+                          {managedUser.activo ? (
                             <button
                               type="button"
                               className="users-action-deactivate"
                               disabled={
-                                managedUser
-                                  .id_usuario ===
-                                  currentUser
-                                    ?.idUsuario ||
+                                managedUser.id_usuario ===
+                                  currentUser?.idUsuario ||
                                 deactivatingId ===
-                                  managedUser
-                                    .id_usuario
+                                  managedUser.id_usuario
                               }
                               onClick={() =>
                                 handleDeactivate(
@@ -969,10 +1024,28 @@ export default function UsersPage() {
                               }
                             >
                               {deactivatingId ===
-                              managedUser
-                                .id_usuario
+                              managedUser.id_usuario
                                 ? "Desactivando..."
                                 : "Desactivar"}
+                            </button>
+                          ) : (
+                            <button
+                              type="button"
+                              className="users-action-edit"
+                              disabled={
+                                activatingId ===
+                                managedUser.id_usuario
+                              }
+                              onClick={() =>
+                                handleActivate(
+                                  managedUser
+                                )
+                              }
+                            >
+                              {activatingId ===
+                              managedUser.id_usuario
+                                ? "Reactivando..."
+                                : "Reactivar"}
                             </button>
                           )}
 

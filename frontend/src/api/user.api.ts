@@ -71,3 +71,15 @@ export async function deactivateUser(
     }
   );
 }
+
+
+export async function activateUser(
+  idUsuario: number
+) {
+  return apiRequest<UserMutationResponse>(
+    `/users/${idUsuario}/activate`,
+    {
+      method: "PATCH",
+    }
+  );
+}
