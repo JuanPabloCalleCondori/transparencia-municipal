@@ -12,9 +12,29 @@ import {
   useAuth,
 } from "../context/AuthContext";
 
+import type {
+  User,
+} from "../types/auth";
+
+
+function getHomeRoute(
+  user: User
+) {
+  if (
+    user.rol ===
+    "FUNCIONARIO_OPERATIVO"
+  ) {
+    return "/sia";
+  }
+
+  return "/dashboard";
+}
+
+
 export default function LoginPage() {
   const {
     login,
+    user,
     isAuthenticated,
   } = useAuth();
 
@@ -33,14 +53,25 @@ export default function LoginPage() {
   const [loading, setLoading] =
     useState(false);
 
-  if (isAuthenticated) {
+
+  /*
+   * Si el usuario ya posee
+   * una sesión activa, lo enviamos
+   * a la página inicial permitida
+   * para su rol.
+   */
+  if (
+    isAuthenticated &&
+    user
+  ) {
     return (
       <Navigate
-        to="/dashboard"
+        to={getHomeRoute(user)}
         replace
       />
     );
   }
+
 
   async function handleSubmit(
     event: FormEvent<HTMLFormElement>
@@ -51,13 +82,20 @@ export default function LoginPage() {
     setLoading(true);
 
     try {
-      await login(
-        email.trim(),
-        password
-      );
+      /*
+       * login devuelve el usuario
+       * autenticado obtenido desde /me.
+       */
+      const authenticatedUser =
+        await login(
+          email.trim(),
+          password
+        );
 
       navigate(
-        "/dashboard",
+        getHomeRoute(
+          authenticatedUser
+        ),
         {
           replace: true,
         }
@@ -73,9 +111,11 @@ export default function LoginPage() {
     }
   }
 
+
   return (
     <main className="login-page">
       <section className="login-card">
+
         <div className="login-header">
           <div className="login-logo">
             M
@@ -92,11 +132,13 @@ export default function LoginPage() {
           </div>
         </div>
 
+
         <p className="login-description">
           Ingresa tus credenciales para
           acceder al sistema de gestión
           municipal.
         </p>
+
 
         <form
           onSubmit={handleSubmit}
@@ -119,6 +161,7 @@ export default function LoginPage() {
             />
           </label>
 
+
           <label>
             Contraseña
 
@@ -136,6 +179,7 @@ export default function LoginPage() {
             />
           </label>
 
+
           {error && (
             <div
               className="login-error"
@@ -145,6 +189,7 @@ export default function LoginPage() {
             </div>
           )}
 
+
           <button
             type="submit"
             disabled={loading}
@@ -153,6 +198,7 @@ export default function LoginPage() {
               ? "Ingresando..."
               : "Iniciar sesión"}
           </button>
+
         </form>
       </section>
     </main>

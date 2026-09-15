@@ -20,7 +20,7 @@ interface AuthContextType {
   login: (
     email: string,
     password: string
-  ) => Promise<void>;
+  ) => Promise<User>;
 
   logout: () => void;
 }
@@ -74,48 +74,45 @@ export function AuthProvider({
   }, []);
 
   async function login(
-    email: string,
-    password: string
-  ) {
-    const response =
-      await apiRequest<LoginResponse>(
-        "/auth/login",
-        {
-          method: "POST",
+  email: string,
+  password: string
+): Promise<User> {
+  const response =
+    await apiRequest<LoginResponse>(
+      "/auth/login",
+      {
+        method: "POST",
 
-          body: JSON.stringify({
-            email,
-            password,
-          }),
-        }
-      );
-
-    localStorage.setItem(
-      "token",
-      response.token
+        body: JSON.stringify({
+          email,
+          password,
+        }),
+      }
     );
 
-    /*
-     * Consultamos /me después del login.
-     * Así el estado del frontend depende
-     * de la información real del backend.
-     */
-    try {
-      const me =
-        await apiRequest<{
-          status: string;
-          usuario: User;
-        }>("/auth/me");
+  localStorage.setItem(
+    "token",
+    response.token
+  );
 
-      setUser(me.usuario);
-    } catch (error) {
-      localStorage.removeItem(
-        "token"
-      );
+  try {
+    const me =
+      await apiRequest<{
+        status: string;
+        usuario: User;
+      }>("/auth/me");
 
-      throw error;
-    }
+    setUser(me.usuario);
+
+    return me.usuario;
+  } catch (error) {
+    localStorage.removeItem(
+      "token"
+    );
+
+    throw error;
   }
+}
 
   function logout() {
     localStorage.removeItem(

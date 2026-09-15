@@ -39,6 +39,10 @@ import SiaDocumentsSection
 import SiaAuditSection
   from "../../components/sia/SiaAuditSection";
 
+import {
+  useAuth,
+} from "../../context/AuthContext";
+
 function formatState(
   state?: string | null
 ) {
@@ -54,6 +58,27 @@ function formatState(
 
 
 export default function SiaDetailPage() {
+
+    const {
+    user,
+  } = useAuth();
+
+
+  const canAssign =
+    user?.rol ===
+      "ADMINISTRADOR_MUNICIPAL" ||
+    user?.rol ===
+      "ENLACE_MUNICIPAL";
+
+
+  const canManageStatus =
+    user?.rol ===
+      "ADMINISTRADOR_MUNICIPAL" ||
+    user?.rol ===
+      "ENLACE_MUNICIPAL" ||
+    user?.rol ===
+      "DIRECTOR_AREA";
+
   const navigate =
     useNavigate();
 
@@ -230,16 +255,18 @@ export default function SiaDetailPage() {
          * y usuarios disponibles
          * para asignación.
          */
-        const options =
-          await getAssignmentOptions();
+        if (canAssign) {
+  const options =
+    await getAssignmentOptions();
 
-        setDepartments(
-          options.departamentos
-        );
+  setDepartments(
+    options.departamentos
+  );
 
-        setUsers(
-          options.usuarios
-        );
+  setUsers(
+    options.usuarios
+  );
+}
 
 
         /*
@@ -287,7 +314,7 @@ export default function SiaDetailPage() {
     }
 
     loadRequest();
-  }, [id]);
+  }, [id, canAssign]);
 
 
   /*
@@ -955,7 +982,7 @@ export default function SiaDetailPage() {
             {/* =========================
                 ASIGNACIÓN
                 ========================= */}
-            {!closed && (
+            {!closed && canAssign && (
               <div className="assignment-section">
 
                 <div className="detail-section-title">
@@ -1132,7 +1159,7 @@ export default function SiaDetailPage() {
             {/* =========================
                 CAMBIO DE ESTADO
                 ========================= */}
-            {!closed &&
+            {!closed && canManageStatus &&
               availableStatuses.length >
                 0 && (
                 <div className="status-management-section">
@@ -1233,7 +1260,7 @@ export default function SiaDetailPage() {
             {/* =========================
                 PRÓRROGA
                 ========================= */}
-            {!closed && (
+            {!closed && canManageStatus && (
               <div className="extension-section">
 
                 <div className="detail-section-title">
