@@ -391,9 +391,3 @@ En `backend/src/server.ts` se activa el job de notificaciones y, si `RUN_AUTOMAT
 Proyecto desarrollado para gestión municipal de solicitudes y transparencia activa. La estructura y la lógica de negocio están pensadas para un entorno institucional con roles y procesos de validación.
 
 ---
-
-Si quieres, puedo dejarte también una versión más orientada a:
-
-- documentación técnica para desarrolladores,
-- README para presentación institucional,
-- o una versión más breve y elegante para GitHub.
